@@ -2892,6 +2892,114 @@ The project should not attempt to make subjective design decisions such as:
 
 Those require human judgment and context beyond static source-code evidence.
 
+## Rule ID allocation
+
+Rule IDs use the `ACI` prefix followed by a numeric identifier.
+
+IDs should be grouped by rule family so related checks remain close together. Exact numbering may evolve during implementation, but IDs should not be renumbered casually once released publicly.
+
+Initial numbering policy:
+
+```text
+ACI001-099  Parser / analysis / type / fundamental correctness
+ACI100-199  Runtime behavior / control flow / lifetime / concurrency
+ACI200-299  Maintainability / readability / refactoring-oriented checks
+ACI300-399  Tests / coverage / CI / build verification
+ACI400-499  Configuration / schemas / markup / project metadata
+ACI500-599  Security / secrets / external trust / unsafe execution
+ACI600-699  Data conversion / serialization / encoding / boundary safety
+ACI700-799  Dependency / package / environment / external integration
+ACI800-899  Reserved for future language-specific families
+ACI900-999  Reserved for internal/checker-level diagnostics
+```
+
+Initial representative allocation:
+
+```text
+ACI001  解析失敗
+ACI002  構文解析不能
+ACI003  未解決シンボル
+ACI004  明らかな型不整合
+ACI005  不正なメンバー参照
+ACI006  不正な呼び出しシグネチャ
+ACI007  定義ファイル必須なのに不足
+ACI008  明示されていない null / None
+ACI009  暗黙の危険な型変換
+ACI010  狭い型への危険な代入
+
+ACI101  無限ループ
+ACI102  終了不能再帰
+ACI103  危険な循環参照
+ACI104  同期デッドロック
+ACI105  非同期デッドロック
+ACI106  危険な参照寿命 / スコープ逸脱
+ACI107  リソース解放漏れ
+ACI108  非決定的な結果
+ACI109  リソース枯渇
+ACI110  TOCTOU
+
+ACI201  長すぎる関数
+ACI202  深すぎるネスト
+ACI203  循環的複雑度が高い
+ACI204  重複コード
+ACI205  未使用コード
+ACI206  無意味なコード
+ACI207  同じ意味のクラス / ファイル
+ACI208  同名シンボル解決の紛らわしさ
+ACI209  コメントがまったくない
+ACI210  明らかに悪い / 誤解を招く名前
+ACI211  言語標準と衝突する命名
+ACI212  ハードコード値の重複
+ACI213  無駄に長い処理経路
+ACI214  長すぎる1行
+ACI215  引数過多
+ACI216  同型引数の取り違えリスク
+ACI217  シャドーイング
+ACI218  不完全なエラーハンドリング
+ACI219  意味を失ったエラー処理
+
+ACI301  単体テスト失敗
+ACI302  テストが存在するのに未検出
+ACI303  静的シミュレーションで失敗の可能性
+ACI304  カバレッジ不足
+
+ACI401  JSON構文 / Schema不整合
+ACI402  INI構文 / 定義不整合
+ACI403  XML破損
+ACI404  XAML破損
+ACI405  HTML破損
+ACI406  プロジェクト / ビルド定義不整合
+
+ACI501  危険な外部プロセス呼び出し
+ACI502  パスワード / Secretの危険な扱い
+ACI503  SQLインジェクション等の入力汚染
+ACI504  パストラバーサル
+ACI505  XSS / 危険なHTML出力
+ACI506  危険なデシリアライズ
+ACI507  認証 / 認可の明らかな欠落
+ACI508  弱い暗号 / TLS設定
+ACI509  不確定な外部情報の過信
+ACI510  危険なポインタ / 参照ハック
+
+ACI601  受け取り側でのデータ欠損
+ACI602  型未指定の受け渡し
+ACI603  危険な文字コード変換
+ACI604  動的型付け言語での暗黙の型変更
+ACI605  ランダム性不足
+ACI606  ランダム用途ではないのに結果が揺れる
+
+ACI701  依存関係解決失敗
+ACI702  package / lockfile不整合
+ACI703  既知の重大脆弱性を持つ依存
+ACI704  外部ツールへの過剰依存
+
+ACI901  checker内部エラー
+ACI902  analyzerプロセス異常終了
+ACI903  部分解析しか完了しなかった
+```
+
+Rules in the same family should continue to use nearby IDs. Gaps are intentional and may be used for future rules.
+
 ## Diagnostic model
 
 Language-specific diagnostics should eventually be normalized into a common representation.
