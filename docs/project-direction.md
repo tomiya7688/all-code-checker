@@ -3001,6 +3001,34 @@ ACI2xx 警告 テストファイルが存在しますが、実行されたテス
 
 These checks are part of the v1.0.0 target scope and should be prioritized after the core parsing/semantic-analysis foundation is stable.
 
+## Implementation tracking
+
+Implementation work is tracked in GitHub Issues by implementation unit rather than by one Issue per individual rule.
+
+The intended order is:
+
+```text
+core contracts / input discovery / configuration
+  → analyzer orchestration
+  → C# / Python / TypeScript / Go backends
+  → shared rule families
+  → test / coverage integration
+  → GUI
+  → strict all-code-checker self-check
+```
+
+Related rules that share the same AST, semantic, data-flow, lifetime, concurrency, or security infrastructure should be implemented together where practical.
+
+A dedicated design blocker Issue tracks compatibility-sensitive decisions that should be fixed before the corresponding implementation starts:
+
+- configuration file contract
+- exact CUI options and exit-code mapping
+- external language toolchain/runtime dependency policy
+- GUI framework
+- .NET target version
+
+Dependency-vulnerability source selection and coverage-provider/default-threshold details may be decided later because they do not block the checker core.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
