@@ -478,6 +478,27 @@ English output is planned for future support, but it is explicitly outside the v
 
 ### Severity philosophy
 
+### Severity and bug-risk wording
+
+Severity should also reflect how strongly a detected pattern is connected to future bugs.
+
+A useful wording scale is:
+
+- `危険`: バグの原因になる、またはほぼ確実にバグの原因になる
+- `警告`: かなり近い将来、バグを生む可能性が高い
+- `注意`: バグの原因になりかねない、またはレビューしておく価値がある
+
+This is not intended as a mathematically precise probability model. It is a practical wording guideline for keeping diagnostics consistent.
+
+The distinction is especially important for maintainability-oriented rules:
+
+- deep nesting is usually `注意`
+- extremely deep and branch-heavy nesting may become `警告`
+- deep nesting alone should not become `危険`, because it does not inherently make the program fail
+
+Likewise, advisory rules may still be emitted frequently when they merely indicate a pattern that can become a bug source later.
+
+
 The three severity levels are not intended to have equal emission thresholds.
 
 - `危険` should be conservative and require strong evidence of an actual failure, invalid operation, or serious safety problem.
