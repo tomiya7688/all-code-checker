@@ -218,6 +218,49 @@ updateUser(input); // structurally compatible, but may cross a semantic boundary
 
 These checks belong to semantic safety rather than architectural design review.
 
+## Layer 4: Excessive function responsibility heuristics
+
+The checker may detect functions or methods that appear to be doing too much, even though this approaches software-design territory.
+
+This category must remain advisory. The tool is not intended to decide whether a design is "good" or "bad".
+
+The default severity should be:
+
+- `注意`: the function is unusually large or complex and may be worth reviewing.
+- `警告`: multiple strong signals indicate that the function is very likely carrying too many responsibilities.
+- `危険`: should generally not be used for this category.
+
+The checker should not rely on line count alone.
+
+Candidate signals include:
+
+- total source lines in the function
+- number of branches
+- nesting depth
+- cyclomatic complexity
+- number of local variables
+- number of parameters
+- number of external calls
+- number of distinct state mutations
+- number of exception / error handling branches
+- mixture of unrelated operation types such as validation, persistence, formatting, I/O, and orchestration in one function
+
+A function should only be promoted from `注意` to `警告` when several strong signals are present together.
+
+Example output:
+
+```text
+ACI2xx 注意 この関数は分岐数とネスト深度が大きく、複数の責務を持っている可能性があります
+```
+
+or, for a stronger case:
+
+```text
+ACI2xx 警告 この関数は非常に大きく、複雑度・分岐数・外部操作数の複数指標で高い値を示しています
+```
+
+This rule family should avoid prescribing a specific refactoring or architecture. It should only surface measurable evidence that review may be warranted.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
