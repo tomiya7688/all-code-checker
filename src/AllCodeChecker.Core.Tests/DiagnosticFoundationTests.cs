@@ -39,6 +39,17 @@ public sealed class DiagnosticFoundationTests
     }
 
     [Fact]
+    public void PublishedRuleCatalogReservesDocumentedIds()
+    {
+        RuleRegistry registry = PublishedRuleCatalog.CreateRegistry();
+
+        Assert.True(registry.TryGet(AciRuleId.Parse("ACI001"), out RuleDefinition? definition));
+        Assert.Equal("解析失敗", definition!.Name);
+        Assert.Throws<InvalidOperationException>(
+            () => registry.Register(new RuleDefinition(AciRuleId.Parse("ACI001"), "再利用")));
+    }
+
+    [Fact]
     public void DuplicateRuleRegistrationIsRejected()
     {
         var registry = new RuleRegistry();
