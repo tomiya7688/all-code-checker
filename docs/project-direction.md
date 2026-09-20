@@ -2140,9 +2140,13 @@ Candidate patterns include:
 
 Typical severity:
 
-- `注意`: the name is clearly vague, misleading, or no longer representative
-- `警告`: only when the misleading name is likely to cause incorrect usage or dangerous misunderstanding
+- `注意`: the name is clearly vague, misleading, redundant, or no longer representative
+- `警告`: the user-defined name collides with or strongly shadows a language-standard, standard-library, runtime, or other widely recognized built-in symbol while still remaining technically valid
 - `危険`: not used for naming quality alone
+
+Examples of warning-level naming collisions may include user-defined symbols named similarly to standard types/modules/APIs such as `String`, `List`, `Task`, `File`, `Path`, `Math`, `Object`, or language-specific equivalents, when the collision creates a realistic risk of confusion or accidental resolution to the wrong symbol.
+
+The checker should not warn merely because a short/common word also exists somewhere in a standard library. The collision should be meaningful in the current language, scope, imports/usings, or project context.
 
 The checker should rely on contextual evidence such as:
 
