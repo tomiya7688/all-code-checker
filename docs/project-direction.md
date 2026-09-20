@@ -863,6 +863,51 @@ In particular, ambiguous priority should normally produce `警告`, not `危険`
 
 CSS support is explicitly post-v1.0.0 scope.
 
+## Implementation language
+
+The main implementation language of `all-code-checker` is C# on .NET.
+
+C# is responsible for the application's central orchestration layer, including:
+
+- checker core
+- project/input discovery
+- analyzer orchestration
+- normalized ACI diagnostics
+- CUI
+- GUI
+- configuration handling
+- result aggregation
+- CI exit/status handling
+
+The intended architecture is approximately:
+
+```text
+                ┌─ CUI
+                │
+C# Checker Core ├─ GUI
+                │
+                ├─ C# analyzer
+                ├─ TypeScript analyzer
+                ├─ Python analyzer
+                ├─ Go analyzer
+                └─ future analyzers
+```
+
+C# being the main implementation language does not require every language parser or analyzer to be reimplemented in C#.
+
+Where a target language already provides a reliable parser, compiler API, semantic model, or type-analysis implementation, the checker may use that language's native tooling and normalize the result into the common ACI diagnostic model.
+
+Examples include:
+
+- C#: Roslyn directly from the .NET process
+- TypeScript: TypeScript Compiler API through an analyzer adapter/helper
+- Go: Go parser/type tooling through an analyzer adapter/helper
+- Python: Python AST/static-analysis tooling where appropriate
+
+This avoids recreating full compiler frontends while keeping the user-facing checker, configuration, reporting, CUI, and GUI unified in C#/.NET.
+
+The CUI and GUI must share the same C# checker core.
+
 ## Input model
 
 The checker should accept three primary input forms.
