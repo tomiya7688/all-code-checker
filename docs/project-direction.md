@@ -1561,6 +1561,46 @@ The checker should distinguish between:
 
 Analysis failure should also cause the checker run to be considered unsuccessful.
 
+## Overall result status
+
+The checker should produce an overall result status separately from the list of individual diagnostics.
+
+The overall result is determined by the strongest enabled diagnostic that was emitted.
+
+Default aggregation:
+
+```text
+if any 危険 exists
+→ overall = 危険
+
+else if any 警告 exists
+→ overall = 警告
+
+else if any 注意 exists
+→ overall = 注意
+
+else
+→ overall = 正常
+```
+
+This overall status is separate from the individual diagnostic output.
+
+Example:
+
+```text
+ACI021 注意 ...
+ACI044 警告 ...
+ACI107 危険 ...
+
+全体結果: 危険
+```
+
+Severity filtering affects the visible/effective result according to the user's selected settings.
+
+For example, if `注意` is disabled and the project only contains notice-level diagnostics, the effective overall result may be `正常`.
+
+The exact CI exit-code mapping can be defined separately, but the human-readable overall result should follow this strongest-severity aggregation model.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
