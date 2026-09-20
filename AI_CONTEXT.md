@@ -39,8 +39,8 @@
 
 ## Reference Projects
 
-- `tomiya7688/upd-commander-base-design`: strict checker self-check / CI gate の考え方
-- `tomiya7688/oop-design-checker`: C# checker core / frontend separation と .NET CI
+- `tomiya7688/upd-commander-base-design`: strict design checkerとしてCIへ導入済み
+- `tomiya7688/oop-design-checker`: strict OOP design checkerとしてCIへ導入済み
 - `tomiya7688/ai-context-reducer`: search-first / targeted validation / context reduction
 
 ## Ignore Normally
@@ -58,7 +58,9 @@ all-code-checker 自身も自身の基準から免除しない。
 
 1. Release build
 2. .NET analyzers + warnings as errors
-3. CLI self-check entry point against `src/`
+3. UPD Commander Base Design strict check
+4. OOP Design Checker `--fail-on attention`
+5. CLI self-check entry point against `src/`
 
 ルール実装が利用可能になったものから、同じself-checkへ順次追加し、最終的には all-code-checker 自身に危険・警告・注意の許容方針を適用する。
 
