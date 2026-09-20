@@ -1422,6 +1422,52 @@ ACI2xx 警告 このコードは実質的に何も行っておらず、処理の
 
 The checker should account for language-specific side effects and must not classify an expression as meaningless merely because its return value is unused. Calls that may perform I/O, mutate state, log, synchronize, raise exceptions, or otherwise have observable behavior are not no-ops.
 
+## Repeated hard-coded values
+
+The checker should detect literals that are repeatedly hard-coded across the project when they are likely to represent one shared concept or configuration value.
+
+This includes both numeric and string literals.
+
+Candidate patterns include:
+
+- the same non-trivial number repeated in many places
+- the same path, URL, endpoint, key, status string, identifier, timeout, port, limit, or format string repeated across files
+- the same literal used in multiple branches/functions where changing the value would likely require synchronized edits
+- several near-identical literals that appear to represent one conceptual constant
+- repeated protocol/application values that would be safer as constants, enums, configuration, or shared definitions
+
+Typical severity:
+
+- `注意`: a repeated literal is likely worth extracting into a shared constant or configuration value
+- `警告`: an important hard-coded value is duplicated widely enough that inconsistent future edits are likely
+- `危険`: not used for hard-coding alone
+
+The checker should avoid flagging common harmless literals too aggressively.
+
+Examples that may usually be ignored or require a higher repetition threshold include:
+
+- `0`
+- `1`
+- empty strings
+- `true` / `false`
+- trivial loop bounds
+- obvious format separators
+- language/framework idioms
+
+The analysis should consider context so that the same literal used for unrelated meanings is not automatically treated as one shared constant.
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 同じ値が複数箇所にハードコードされています。共通定数または設定値にまとめられないか確認してください
+```
+
+```text
+ACI2xx 警告 重要と思われる同一値が多数箇所にハードコードされており、変更時の修正漏れにつながる可能性があります
+```
+
+This rule may use AST context, symbol names, surrounding calls, file locations, and repetition count to distinguish meaningful duplication from coincidental equal values.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
