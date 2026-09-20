@@ -1468,6 +1468,60 @@ ACI2xx 警告 重要と思われる同一値が多数箇所にハードコード
 
 This rule may use AST context, symbol names, surrounding calls, file locations, and repetition count to distinguish meaningful duplication from coincidental equal values.
 
+## Unexpected non-deterministic behavior
+
+The checker should detect code that is expected to behave deterministically but may produce different results across repeated executions with the same effective input.
+
+This rule does not apply when non-determinism is intentional or inherent to the operation.
+
+Legitimate sources of non-determinism may include:
+
+- random-number generation
+- current time / timers
+- external I/O
+- network responses
+- user input
+- concurrency / race-sensitive work
+- intentionally unordered processing
+- environment-dependent behavior explicitly used by the program
+
+The target is code where no such reason is intended, but the implementation may still produce unstable results.
+
+Candidate causes include:
+
+- dependence on iteration order of unordered collections
+- hidden mutable global/shared state
+- uninitialized or partially initialized values
+- race conditions affecting result construction
+- use of hash/map ordering where ordering is not guaranteed
+- unstable sorting due to missing tie-breakers
+- reading mutable state multiple times within one logical calculation
+- relying on filesystem enumeration order
+- depending on reflection/discovery order that is not guaranteed
+- accidental dependence on object identity/address/hash values
+- cache/state leakage between calls
+- side effects inside code that appears to be a pure calculation
+
+Suggested severity:
+
+- `注意`: the implementation depends on behavior whose ordering/stability is not guaranteed, but output instability is not yet strongly demonstrated
+- `警告`: static analysis strongly indicates that identical inputs may produce different outputs despite no intentional source of randomness/non-determinism
+- `危険`: repeated real execution/test with the same effective input demonstrates inconsistent output where deterministic behavior is expected
+
+Example diagnostics:
+
+```text
+ACI2xx 警告 この処理はランダム性を意図していないようですが、未保証の順序に依存しているため実行ごとに結果が変わる可能性があります
+```
+
+```text
+ACI3xx 危険 同一入力で複数回実行した結果が一致しませんでした
+```
+
+Where a test environment is available, the checker may optionally repeat deterministic-looking tests or function checks to detect unstable output.
+
+The checker must avoid flagging functions merely because they call time-, random-, I/O-, or concurrency-related APIs when such behavior is clearly part of their intended contract.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
