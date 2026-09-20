@@ -2,7 +2,7 @@ namespace AllCodeChecker.Diagnostics;
 
 public enum DiagnosticSeverity
 {
-    Notice,
-    Warning,
-    Danger
+    Notice = 1,
+    Warning = 2,
+    Danger = 3
 }
