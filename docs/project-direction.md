@@ -247,6 +247,8 @@ ACI003 注意 理由
 
 The default output language is Japanese.
 
+English output should be supported in a future release, but for v1.0.0 it is only documented as a planned capability and is not a release requirement.
+
 A normalized internal representation may look like:
 
 ```json
@@ -274,7 +276,9 @@ These are intentionally different from ordinary compiler-style `error / warning 
 - `警告`: the code is valid, but the operation has a high probability of failing or behaving incorrectly.
 - `注意`: the pattern is suspicious or worth reviewing, but the evidence is weaker or the outcome depends more heavily on runtime/context.
 
-The default user-facing language is Japanese.
+The default and v1.0.0-required user-facing language is Japanese.
+
+English output is planned for future support, but it is explicitly outside the v1.0.0 required scope.
 
 ## Current implementation priority
 
