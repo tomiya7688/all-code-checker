@@ -337,6 +337,40 @@ The checker should distinguish between:
 
 The first belongs to obvious-error detection. The second belongs to this advisory rule family.
 
+## Missing comments in non-trivial code
+
+The checker should emit an advisory diagnostic when a non-trivial source file or sufficiently large code region contains no comments at all.
+
+Typical severity:
+
+- `注意`: no comments are present in code large enough that some explanation may be useful.
+- `警告`: not used by default for this category.
+- `危険`: not used for this category.
+
+The purpose of this rule is not to require comments on every function or line. Comment quantity is not a direct measure of code quality, and clear code may legitimately need few comments.
+
+The rule should therefore avoid triggering on:
+
+- very small files
+- generated code
+- trivial data-only declarations
+- simple configuration wrappers
+- files explicitly excluded from documentation/comment checks
+
+Candidate trigger conditions may include:
+
+- a source file exceeds a configurable size threshold and contains no comments
+- a large class/module contains no comments at all
+- a substantial implementation region contains no explanatory comments despite high complexity
+
+Example diagnostic:
+
+```text
+ACI2xx 注意 このファイルにはコメントがありません。処理量が多いため、意図や前提条件を説明するコメントが必要ないか確認してください
+```
+
+This rule should remain advisory and should not attempt to judge whether the code is poorly designed.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
