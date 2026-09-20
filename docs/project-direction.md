@@ -2013,6 +2013,63 @@ Examples may include:
 
 The checker should not flag every bidirectional relationship or recursive data structure. A cycle should only be reported when concrete failure/lifetime/initialization evidence exists or the risk is strong enough to justify review.
 
+## Data loss at receiving boundaries
+
+The checker should detect cases where data is present on the sending/source side but is dropped, truncated, ignored, or otherwise unavailable on the receiving side.
+
+This applies across function calls, DTO mappings, serialization boundaries, APIs, IPC, configuration loading, file formats, and similar data-transfer paths.
+
+Candidate patterns include:
+
+- source objects contain fields that are not mapped into the receiving object
+- serializers omit fields that the receiver later expects
+- receiver types are narrower than sender types and lose fields
+- DTO conversions silently drop values
+- API request/response models disagree about available fields
+- destructuring or projection unintentionally omits required values
+- positional arguments are mapped into a receiver that ignores part of the data
+- configuration readers load only part of a structure while downstream code assumes the missing values exist
+- versioned message formats drop fields without compatibility handling
+- optional/nullable receiver fields unintentionally absorb missing required data
+- data is transformed through an intermediate model that cannot represent all original information
+
+Typical severity:
+
+- `危険`: required data is statically proven to be lost and correct downstream behavior cannot be preserved
+- `警告`: data loss is highly likely and the receiver appears to depend on the missing information
+- `注意`: fields are dropped, but the reduction may be intentional, such as projection, redaction, view-model shaping, or protocol versioning
+
+The checker should distinguish intentional data reduction from accidental loss.
+
+Signals that may indicate intentional behavior include:
+
+- explicit projection/select operations
+- redaction/sanitization functions
+- comments or annotations indicating field omission
+- version-conversion layers
+- dedicated view models
+- security/privacy filtering
+- serialization-ignore annotations
+
+Example diagnostics:
+
+```text
+ACI2xx 警告 送信元に存在するデータの一部が受け取り側へ引き継がれていません。受け取り側がこの値を必要としていないか確認してください
+```
+
+```text
+ACI1xx 危険 必須フィールドが変換処理で欠落しており、受け取り側で必要な値を復元できません
+```
+
+This rule should integrate with:
+
+- narrowing conversion analysis
+- JSON/configuration validation
+- semantic duplicate DTO/type checks
+- serialization/deserialization analysis
+- API/schema comparison
+- static data-flow analysis
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
