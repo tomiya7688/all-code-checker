@@ -1233,6 +1233,54 @@ ACI2xx 警告 大きな処理ブロックが複数箇所に重複しており、
 
 Duplicate-code detection may be implemented with a similarity score, but the user-facing result should not imply that similarity percentage alone determines code quality. The score should only support detection of clearly duplicated behavior.
 
+## Unused and apparently disconnected code
+
+The checker should detect code that is clearly unused or disconnected from the active project.
+
+This category is primarily advisory because unused code may be intentional, experimental, temporarily unfinished, or reserved for future work.
+
+Candidate targets include:
+
+- functions/methods with no references
+- private types/classes/modules with no references
+- unused local variables
+- unused imports/includes
+- unreachable helper code
+- constants or fields that are never read
+- configuration values or handlers that are defined but never consumed
+- code paths that are structurally disconnected from all known entry points
+- duplicate legacy implementations that are no longer referenced
+
+Typical severity:
+
+- `注意`: code is clearly unused, but may be intentionally unfinished or retained for future work
+- `警告`: the symbol appears to be part of an expected active flow but is not connected or referenced where it likely should be
+- `危険`: not used for unused-code status alone
+
+Possible stronger-warning signals include:
+
+- an event/callback handler follows the expected naming/signature convention but is never registered
+- a command/route/endpoint implementation exists but is never wired into the application
+- a plugin/mod hook exists but is not registered
+- a serializer/deserializer or configuration loader exists but is never called despite corresponding files being present
+- a required lifecycle method appears implemented but is disconnected from startup/runtime flow
+- an implementation is referenced only by dead code
+- a symbol name and surrounding structure strongly imply required usage, but no reachable call/reference exists
+
+The checker should be conservative when promoting unused code to `警告`. "Unused" alone is not evidence of a bug.
+
+The default interpretation is:
+
+```text
+clearly unused
+→ 注意
+
+appears intended to be active, but is not wired into the reachable program
+→ 警告
+```
+
+Language/framework-specific adapters may provide stronger evidence for registration-based systems, reflection-heavy frameworks, plugin systems, dependency injection, routes, event handlers, and similar patterns.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
