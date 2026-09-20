@@ -898,6 +898,61 @@ src/ based codebase
 
 These projects are references/supporting tools for implementation. They should not force all-code-checker to copy their internal architecture directly when the requirements of this project differ.
 
+
+### Adopted implementation principles
+
+After reviewing the reference projects, all-code-checker adopts the following principles:
+
+- keep the main implementation under `src/`
+- separate checker core logic from user-facing frontends
+- keep CUI and future GUI on the same checker core
+- use strict normal builds and .NET analyzers as an early quality gate
+- make checker self-validation a required CI concern rather than an optional manual step
+- keep a small `AI_CONTEXT.md` as a routing index instead of duplicating the full specification
+- use search-first / targeted validation during AI-assisted development
+- avoid making `ai-context-reducer` or the reference repositories runtime/build dependencies
+- adopt only useful principles, not the full directory/layout conventions of the reference projects
+
+The initial implementation skeleton is:
+
+```text
+src/
+├─ AllCodeChecker.Core/
+└─ AllCodeChecker.Cli/
+```
+
+More projects, including the GUI and language-specific analyzer adapters, should be added only when their responsibility is concrete enough to justify a separate project.
+
+### Self-check and self-violation policy
+
+all-code-checker must not be exempt from its own quality requirements.
+
+CI must build all-code-checker itself and treat that build result as a required gate.
+
+During the bootstrap phase, the self-quality gate consists of:
+
+- Release build
+- .NET analyzers enabled
+- warnings treated as errors
+- code-style analysis in build
+- CLI self-check entry point executed against `src/`
+
+As ACI rules become implemented and reliable, those rules should be enabled against the all-code-checker repository itself.
+
+The intended end state is:
+
+```text
+build all-code-checker
+        ↓
+run all-code-checker against its own src/
+        ↓
+any enabled self-violation
+        ↓
+CI failure according to the configured gate
+```
+
+The checker should therefore evolve toward dogfooding its own released analysis behavior in CI.
+
 ## Implementation language
 
 The main implementation language of `all-code-checker` is C# on .NET.
