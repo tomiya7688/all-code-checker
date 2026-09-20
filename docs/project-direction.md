@@ -863,6 +863,41 @@ In particular, ambiguous priority should normally produce `警告`, not `危険`
 
 CSS support is explicitly post-v1.0.0 scope.
 
+## Development structure and reference projects
+
+The detailed directory layout is not fixed yet.
+
+Implementation code should primarily live under:
+
+```text
+src/
+```
+
+The project should avoid overcommitting to a detailed folder structure before the checker core and analyzer boundaries become clearer.
+
+During implementation, the following existing Tomiya projects should be used as design/reference inputs:
+
+- `tomiya7688/upd-commander-base-design`
+  - reference for baseline CI practices and base project design
+- `tomiya7688/oop-design-checker`
+  - reference for object-oriented design/checker implementation approaches
+- `tomiya7688/ai-context-reducer`
+  - used to reduce implementation context while working on the repository
+
+The intended development workflow is therefore:
+
+```text
+existing Tomiya CI/design references
+  ↓
+all-code-checker design and implementation
+  ↓
+ai-context-reducer-assisted context reduction during implementation
+  ↓
+src/ based codebase
+```
+
+These projects are references/supporting tools for implementation. They should not force all-code-checker to copy their internal architecture directly when the requirements of this project differ.
+
 ## Implementation language
 
 The main implementation language of `all-code-checker` is C# on .NET.
