@@ -371,6 +371,48 @@ ACI2xx 注意 このファイルにはコメントがありません。処理量
 
 This rule should remain advisory and should not attempt to judge whether the code is poorly designed.
 
+## Excessive control-flow nesting
+
+The checker should detect control-flow structures that are nested unusually deeply.
+
+This is primarily a readability and maintainability diagnostic rather than a correctness error.
+
+Typical severity:
+
+- `注意`: nesting is deeper than the normal advisory threshold.
+- `警告`: nesting is extremely deep and the control flow is difficult to follow safely.
+- `危険`: not normally used for this category.
+
+Candidate constructs include language-equivalent forms of:
+
+- `if / else`
+- `for`
+- `while / do-while`
+- `switch / case`
+- `match`
+- `try / catch / finally`
+- nested callbacks / closures where they materially increase control-flow depth
+
+The metric should be based on AST/control-flow nesting depth rather than raw indentation or line count.
+
+The implementation should allow language-specific adjustments because some languages naturally express certain constructs with different AST shapes.
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 制御構造のネストが深くなっています。処理の流れが追いにくくないか確認してください
+```
+
+```text
+ACI2xx 警告 制御構造のネストが非常に深く、処理経路の把握が困難になっています
+```
+
+Suggested behavior:
+
+- emit `注意` relatively aggressively once the configured advisory depth is exceeded
+- promote to `警告` only at a substantially deeper threshold or when deep nesting is combined with many branches
+- do not prescribe a specific refactoring; only report the measurable nesting condition
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
