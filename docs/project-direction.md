@@ -623,7 +623,47 @@ The intended responsibilities are:
 
 Test failures are ordinary CI failures and should be clearly separated from advisory static-analysis diagnostics.
 
-The exact mapping between failed test execution and the `危険 / 警告 / 注意` diagnostic system can be finalized with the overall CI exit-status design. A failed test itself should always cause the checker run to be considered unsuccessful unless the user explicitly configures otherwise.
+A failed unit/function-level test is classified as `危険`.
+
+Example:
+
+```text
+ACI3xx 危険 単体テストが失敗しました: expected 200, got 500
+```
+
+A failed test should cause the checker run to be considered unsuccessful unless the user explicitly configures otherwise.
+
+### Static test simulation when no test environment exists
+
+When a project has no usable unit-test environment, the checker should still attempt a limited static simulation of function behavior where practical.
+
+This may use:
+
+- AST evaluation
+- constant propagation
+- control-flow analysis
+- data-flow analysis
+- lightweight symbolic execution
+- known standard-library semantics
+- statically known function inputs and return paths
+
+The goal is not to replace a real runtime or full test framework. The simulation is best-effort and must remain bounded.
+
+If the checker can determine that a simulated function path is likely to fail or produce invalid behavior, it should emit `警告`, not `危険`, because the result comes from static simulation rather than an actually executed test.
+
+Example:
+
+```text
+ACI3xx 警告 テスト環境が見つからなかったため静的シミュレーションを実行しました。この関数は特定の入力経路で正常に完了しない可能性があります
+```
+
+The checker should distinguish clearly between:
+
+- real test failure → `危険`
+- static simulation indicates likely failure → `警告`
+- simulation is inconclusive → no failure diagnostic, or at most `注意` if the lack of verifiability itself is worth surfacing
+
+Static simulation must not claim runtime certainty when external I/O, reflection, dynamic loading, native calls, concurrency, randomness, time-dependent behavior, or other runtime-only state prevents reliable analysis.
 
 ## Out of scope for the checker
 
