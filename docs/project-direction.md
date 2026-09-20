@@ -2070,6 +2070,53 @@ This rule should integrate with:
 - API/schema comparison
 - static data-flow analysis
 
+## Untyped or weakly typed value passing
+
+The checker should detect important values that cross function/module/API boundaries without useful type information when this materially increases the risk of misuse, runtime failure, or data misinterpretation.
+
+This rule must be language-aware.
+
+Untyped values are normal in some languages and coding styles, so the checker should not report every dynamically typed value.
+
+Candidate patterns include:
+
+- C# values passed through `object` or `dynamic` where a concrete type is available or strongly implied
+- TypeScript values passed through `any`, broad index signatures, or untyped object shapes across important boundaries
+- Python values crossing typed APIs without annotations or runtime validation where surrounding code otherwise relies on type hints
+- generic maps/dictionaries used as ad-hoc DTOs without schema/type checks
+- JSON-like objects passed between modules with no declared shape
+- callback/event payloads with no meaningful type contract
+- deserialized values passed directly into business logic before validation
+- reflection/dynamic invocation paths where argument types are not checked
+- inter-process/plugin/mod boundaries where the receiver assumes a shape the sender does not declare
+
+Typical severity:
+
+- `注意`: type information is missing or overly broad, making the boundary harder to verify
+- `警告`: the receiver performs type-sensitive operations and the untyped boundary makes runtime misuse highly likely
+- `危険`: only when static analysis can prove that the received value cannot satisfy the required type/shape
+
+The checker should consider whether:
+
+- runtime validation exists
+- a schema is available
+- generic constraints narrow the value sufficiently
+- the value is internal and trivial
+- the language intentionally uses dynamic typing
+- the boundary is security- or correctness-sensitive
+
+Examples:
+
+```text
+ACI2xx 注意 型情報のない値がモジュール境界を越えて受け渡されています。受け取り側の期待する型が明確か確認してください
+```
+
+```text
+ACI2xx 警告 型未指定の値に対して受け取り側が特定型前提の操作を行っており、実行時エラーにつながる可能性があります
+```
+
+This rule should integrate with schema/configuration validation, data-loss checks, semantic-safety rules, and runtime validation detection.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
