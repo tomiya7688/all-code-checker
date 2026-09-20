@@ -301,6 +301,42 @@ The checker must not flag a construct merely because it uses references or point
 
 C++ support may substantially expand this rule family because the language exposes more direct pointer and lifetime hazards, but the category itself is not C++-specific.
 
+## Ambiguous or confusing symbol resolution
+
+The checker should detect cases where multiple functions, methods, or symbols with the same name become visible through imports, includes, namespaces, modules, using directives, or equivalent mechanisms, and a call becomes difficult to interpret safely.
+
+This category is primarily advisory.
+
+Typical severity:
+
+- `注意`: the call resolves successfully, but multiple visible symbols with the same name make the intent unclear or fragile.
+- `警告`: resolution is technically valid but depends on subtle precedence, overload, namespace, extension-method, import-order, or shadowing rules that make accidental misuse highly plausible.
+- `危険`: only when the language/toolchain itself considers the call unresolved or genuinely ambiguous and failure is effectively certain.
+
+Candidate patterns include:
+
+- a user-defined function has the same name as an imported function
+- multiple imported modules expose the same function name
+- wildcard/star imports introduce same-named symbols
+- namespace/using directives make several overload sets visible
+- extension methods or equivalent mechanisms introduce competing call targets
+- a local definition shadows an imported function with the same name
+- include/import changes could silently change which symbol a call resolves to
+- the call relies on subtle overload resolution while several user-defined candidates are visible
+
+Example diagnostic:
+
+```text
+ACI2xx 注意 同名の関数が複数のインポート元とユーザー定義コードから参照可能です。呼び出し先が分かりにくいため、明示的な名前空間または修飾名の使用を確認してください
+```
+
+The checker should distinguish between:
+
+1. a truly ambiguous call that the compiler/type checker will reject, and
+2. a call that resolves successfully but is confusing or fragile for humans.
+
+The first belongs to obvious-error detection. The second belongs to this advisory rule family.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
