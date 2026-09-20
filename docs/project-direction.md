@@ -863,6 +863,87 @@ In particular, ambiguous priority should normally produce `警告`, not `危険`
 
 CSS support is explicitly post-v1.0.0 scope.
 
+## Input model
+
+The checker should accept three primary input forms.
+
+### 1. Project parent directory
+
+A directory may be supplied as the input root.
+
+Example:
+
+```text
+all-code-checker ./my-project
+```
+
+The checker should inspect the directory contents, detect project boundaries, supported languages, project files, configuration files, test environments, and entry points.
+
+A directory input may contain multiple projects or multiple languages.
+
+### 2. Project file
+
+A project/build definition file may be supplied directly.
+
+Examples include:
+
+- Visual Studio solution/project files such as `.sln` / `.csproj`
+- CMake project files
+- equivalent project/build metadata for supported ecosystems
+
+Example:
+
+```text
+all-code-checker MySolution.sln
+```
+
+When a project file is supplied, the checker should treat that file as the primary project boundary and resolve referenced source/configuration/test files from it.
+
+### 3. Single file containing an entry point
+
+A single source file may be supplied when it contains a program entry point or otherwise represents an executable starting point.
+
+Example:
+
+```text
+all-code-checker main.py
+all-code-checker Program.cs
+all-code-checker main.go
+```
+
+For single-file input, the checker should not necessarily limit analysis to that file only.
+
+Where practical, it should follow:
+
+- imports
+- includes
+- modules/packages
+- referenced source files
+- configuration/data files loaded by the entry point
+- directly related project metadata
+
+to construct the smallest practical analysis scope around the entry point.
+
+### Input resolution principle
+
+The input identifies the analysis root, not always the exact complete file set.
+
+Conceptually:
+
+```text
+input
+  ↓
+resolve project / source root
+  ↓
+discover language + project boundaries
+  ↓
+discover referenced files and configuration
+  ↓
+run analysis
+```
+
+The checker should avoid scanning unrelated sibling projects unless the selected input root/project explicitly includes them.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
