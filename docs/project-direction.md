@@ -32,6 +32,21 @@ Planned when the Bitlang project has progressed enough:
 
 The initial set is intentionally limited. The goal is to establish a reusable analysis/checking model before expanding to more languages.
 
+### Rationale for language priority
+
+The v1.0.0 language set is also based on the languages currently used most actively across the maintainer's repositories.
+
+From the current active repository set:
+
+- Python is used very frequently.
+- Go and C# are also actively used in multiple projects.
+- TypeScript is included because its structural type system makes it especially useful for developing semantic-safety checks, even when it is not the dominant language in the current repository set.
+- C++ is present in several active repositories, but is intentionally deferred until after v1.0.0 to keep the first implementation scope manageable.
+- Rust currently has lower usage and is also planned for post-v1.0.0 support.
+- Bitlang support will be added when the language and compiler project are mature enough to expose a stable analysis surface.
+
+This ordering is therefore driven by both real-world usage and the value each language provides for validating the checker's architecture.
+
 ## Analysis layers
 
 The checker is expected to grow in layers.
