@@ -1137,6 +1137,46 @@ Examples:
 
 The exact required-file rules should live in each language/project adapter so they can evolve independently.
 
+## Cyclomatic complexity diagnostics
+
+The checker should calculate cyclomatic complexity for functions/methods where the language adapter can provide reliable control-flow information.
+
+This overlaps with excessive nesting and oversized-function checks, but it measures a different property:
+
+- nesting depth measures how deeply control structures are nested
+- cyclomatic complexity measures how many independent execution paths exist
+
+A function may have shallow nesting but still have high cyclomatic complexity due to many independent branches.
+
+Typical severity:
+
+- `注意`: cyclomatic complexity exceeds the advisory threshold
+- `警告`: complexity is very high and the number of possible execution paths makes maintenance and testing difficult
+- `危険`: not used for complexity alone
+
+Candidate contributors include language-equivalent forms of:
+
+- `if / else if`
+- loops
+- `case` / `match` branches
+- conditional expressions
+- short-circuit boolean branches where appropriate
+- exception/error handling paths
+
+The checker should avoid using one universal threshold blindly across every language. Default thresholds may be shared, but language-specific adjustments should be possible.
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 この関数の循環的複雑度が高く、分岐経路が多くなっています
+```
+
+```text
+ACI2xx 警告 この関数の循環的複雑度が非常に高く、テスト漏れや保守時のバグにつながる可能性があります
+```
+
+Cyclomatic complexity should be considered together with other signals such as nesting depth, function size, and branch count, but it should remain available as an independent diagnostic.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
