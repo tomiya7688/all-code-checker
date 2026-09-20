@@ -1281,6 +1281,53 @@ appears intended to be active, but is not wired into the reachable program
 
 Language/framework-specific adapters may provide stronger evidence for registration-based systems, reflection-heavy frameworks, plugin systems, dependency injection, routes, event handlers, and similar patterns.
 
+## Incomplete or dangerously weak error handling
+
+The checker should detect error-handling code that exists but is clearly too weak to cover the realistic failure modes of the operation being protected.
+
+This is broader than simply detecting swallowed exceptions. The target is error handling that gives the appearance of safety while leaving important failure paths uncovered.
+
+Candidate patterns include:
+
+- catching only one narrow exception/error while nearby operations can clearly produce several other likely failures
+- checking only a success/failure boolean while ignoring an accompanying error/status payload
+- handling an error but continuing with state that may already be invalid
+- retry logic that does not cover the actual failure mode
+- fallback logic that can itself fail without a second-level handler
+- cleanup logic that runs only on some failure paths
+- assuming a resource or result is valid after a partially failed operation
+- broad operations with only one shallow guard around them
+- asynchronous operations where only synchronous exceptions are handled
+- network/file/database code that handles one obvious error but leaves equally likely failures uncovered
+- error branches that log but do not prevent subsequent invalid use
+- missing compensation/rollback handling after partial multi-step failure where the need is statically obvious
+
+Typical severity:
+
+- `注意`: error handling appears incomplete or fragile, but missing coverage is not certain
+- `警告`: static analysis shows that a likely failure path is not handled and may leave the program in an invalid or inconsistent state
+- `危険`: generally not used for error-handling quality alone unless the uncovered path already produces a separately provable fatal error
+
+The checker should not judge error handling stylistically. It should base diagnostics on concrete uncovered failure paths, control-flow gaps, resource/state invalidation, and known API behavior.
+
+Examples:
+
+```text
+ACI2xx 注意 この処理にはエラーハンドリングがありますが、想定される失敗経路の一部が処理されていない可能性があります
+```
+
+```text
+ACI2xx 警告 このエラー処理では失敗後も無効な状態の値を利用する経路が残っています
+```
+
+This rule family should work together with:
+
+- swallowed error detection
+- resource lifetime analysis
+- async/concurrency misuse detection
+- return-value/error ignoring
+- static test simulation
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
