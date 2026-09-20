@@ -2171,6 +2171,49 @@ ACI2xx 注意 関数名は値の取得を示していますが、実際には状
 
 The rule should avoid flagging short conventional names in appropriate contexts, such as loop indices, coordinates, mathematical variables, or framework-defined names.
 
+## Implicit type changes in dynamically typed languages
+
+The checker should detect variables whose effective runtime type changes without an explicit conversion or clearly intentional boundary in dynamically typed languages.
+
+This rule is especially relevant to languages such as Python, Ruby, and Luau.
+
+Candidate patterns include:
+
+- a variable holding a number is later assigned a string
+- a scalar variable later becomes a list/array/table/object
+- a variable changes from one object shape/class to an unrelated one
+- a value changes from a collection to a scalar or vice versa
+- a variable used as a boolean flag is later reused for non-boolean data
+- a variable changes type across branches and is later consumed without narrowing/validation
+- a function-local variable changes semantic role and type several times
+- an inferred type changes in a way that makes later operations ambiguous or runtime-failure-prone
+
+Typical severity:
+
+- `注意`: the variable's effective type changes without an explicit conversion and the change may make the code harder to reason about
+- `警告`: later code still appears to rely on the earlier type/shape, making runtime failure or misinterpretation likely
+- `危険`: only when static analysis can prove that a later operation is incompatible with the actual assigned type
+
+The checker should avoid flagging intentional dynamic patterns such as:
+
+- explicit tagged unions / variant-like structures
+- clearly separated branches with proper narrowing
+- parsing/conversion stages where the variable's new type is intentional and obvious
+- framework APIs that intentionally reuse a dynamic container
+- temporary generic holders in very small scopes
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 この変数は明示的な変換なしに異なる型の値を保持しています。意図した型変更か確認してください
+```
+
+```text
+ACI2xx 警告 この変数は途中で文字列に変更されていますが、後続処理では数値として使用されています
+```
+
+This rule should use control-flow and data-flow analysis so that mutually exclusive branches are not treated as accidental type changes when the language's narrowing/guard logic makes usage safe.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
