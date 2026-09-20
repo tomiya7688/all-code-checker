@@ -54,15 +54,19 @@
 
 all-code-checker 自身も自身の基準から免除しない。
 
+外部の UPD Commander / OOP Design Checker は、このprojectに合う通常のfailure thresholdで運用する。
+一方、all-code-checker自身によるself-checkは例外なくstrictとし、利用可能になったACI ruleは `--fail-on notice` で全severityをgateする。
+自己違反を残したままmergeできる状態は認めない。
+
 現在のbootstrap段階では以下を必須gateとする。
 
 1. Release build
 2. .NET analyzers + warnings as errors
-3. UPD Commander Base Design check（既定threshold）
+3. UPD Commander Base Design check（project適合threshold）
 4. OOP Design Checker `--fail-on danger`
 5. CLI self-check entry point against `src/`
 
-ルール実装が利用可能になったものから、同じself-checkへ順次追加し、最終的には all-code-checker 自身に危険・警告・注意の許容方針を適用する。
+ルール実装が利用可能になったものから、bootstrap self-checkを本物のACI self-checkへ置換し、`--fail-on notice` をrequired gateとして維持する。
 
 ## Validation
 
