@@ -1879,6 +1879,85 @@ ACI1xx 危険 この参照は寿命切れのメモリを指しているため、
 
 This rule family should integrate with the broader reference, ownership, and lifetime safety analysis.
 
+## Semantically duplicate classes or files
+
+The checker should detect classes, modules, or files that appear to represent the same concept or responsibility even when their source code is not textually duplicated.
+
+This is different from duplicate-code detection.
+
+Duplicate-code detection asks:
+
+> Are these implementation blocks structurally the same?
+
+Semantic-duplication detection asks:
+
+> Do these classes/files appear to exist for essentially the same purpose?
+
+Candidate signals include:
+
+- highly similar class/file names
+- nearly identical public method/function sets
+- the same dependency set
+- the same input/output types
+- the same configuration or data sources
+- the same call sites or consumers
+- highly overlapping responsibilities inferred from symbol names and usage
+- parallel implementations that differ only slightly
+- two files that expose equivalent helpers under different names
+- separate classes that mutate/read the same state in almost the same way
+- old/new implementations that are both still active without a clear boundary
+
+Examples may include patterns such as:
+
+```text
+UserManager
+UserService
+```
+
+where both classes perform nearly the same operations over the same dependencies, or:
+
+```text
+config_loader.py
+settings_loader.py
+```
+
+where both files load and normalize the same configuration source with nearly equivalent behavior.
+
+Typical severity:
+
+- `注意`: two classes/files appear to have substantially overlapping meaning or responsibility
+- `警告`: parallel semantic duplicates are both active and are likely to drift, receive inconsistent fixes, or create ambiguous ownership of behavior
+- `危険`: not used for semantic duplication alone
+
+The checker should be conservative because similar names do not necessarily mean identical responsibilities.
+
+The decision should combine multiple signals rather than relying on naming alone.
+
+Useful signals may include:
+
+- symbol names
+- AST structure
+- public API shape
+- dependency graph
+- call graph
+- data-flow targets
+- imported modules
+- comments/docstrings
+- file location
+- configuration references
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 このクラスは別のクラスと責務・公開API・依存関係が大きく重複しています。同じ役割を持っていないか確認してください
+```
+
+```text
+ACI2xx 警告 同じ役割と思われる実装が複数箇所で並行して利用されており、修正の不整合が発生する可能性があります
+```
+
+This rule should not prescribe merging classes/files. It should only surface strong evidence that multiple artifacts may represent the same semantic concept.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
