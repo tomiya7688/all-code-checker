@@ -2257,6 +2257,56 @@ ACI2xx 注意 複数のロックをネストして取得しています。取得
 
 This rule should integrate with async/concurrency misuse analysis but remain separately identifiable because synchronous deadlocks can occur without async code.
 
+## Deadlock risks in asynchronous execution
+
+The checker should detect asynchronous waiting patterns that can cause deadlocks, starvation, or permanently unresolved waits.
+
+This category is separate from synchronous deadlock detection because async runtimes introduce additional failure modes involving tasks/futures/promises, event loops, synchronization contexts, async locks, and callback scheduling.
+
+Candidate patterns include:
+
+- awaiting a task while holding an async lock that the awaited task also needs
+- mutually awaiting tasks/futures/promises
+- async lock acquisition cycles
+- awaiting callbacks that cannot run until the current async scope releases a required resource
+- blocking an event loop or synchronization context while waiting for async completion
+- mixing sync-over-async and async-over-sync in a way that creates circular waits
+- awaiting a task whose continuation is scheduled onto a context currently blocked by the caller
+- task dependency graphs with cycles
+- async resource ordering that conflicts across different code paths
+- semaphore/channel/queue waits that can only be satisfied by tasks waiting on the current task
+- awaiting while holding a lock/resource across boundaries where re-entry is required
+- forgotten completion/signaling paths that leave a future/promise unresolved indefinitely
+
+Typical severity:
+
+- `危険`: the async wait/task dependency graph contains a statically proven cycle, or completion is effectively impossible
+- `警告`: the async scheduling/locking pattern makes deadlock or permanent waiting highly probable
+- `注意`: the async dependency structure is fragile or complex enough to deserve review, but no concrete cycle is proven
+
+Example diagnostics:
+
+```text
+ACI1xx 危険 TaskA と TaskB が互いの完了を待機しており、処理が完了しません
+```
+
+```text
+ACI2xx 警告 非同期ロックを保持したまま、そのロックを必要とする可能性のある処理を await しています
+```
+
+```text
+ACI2xx 注意 非同期タスク間の待機関係が複雑です。循環待機が発生しないか確認してください
+```
+
+Where practical, the checker should build an async wait/dependency graph in addition to ordinary control-flow analysis.
+
+This rule should integrate with:
+
+- synchronous deadlock detection
+- async/concurrency misuse detection
+- resource lifetime analysis
+- static test simulation
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
