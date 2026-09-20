@@ -2348,6 +2348,52 @@ The checker should allow intentional abstraction boundaries where low-level deta
 
 This rule should integrate with swallowed-error detection and incomplete error-handling analysis.
 
+## Undeclared null / None / missing-value flow
+
+The checker should detect values that can become `null`, `None`, `nil`, `undefined`, or an equivalent missing-value state even though the surrounding type contract or API does not declare that possibility.
+
+This rule is especially important at function returns, parameters, object fields, deserialization boundaries, collection lookups, and external-data boundaries.
+
+Candidate patterns include:
+
+- a function declared or inferred to return a non-null value but one control-flow path returns `null` / `None`
+- a parameter is treated as non-null by the receiver even though callers can pass a missing value
+- a field/property is declared non-null but is not initialized on every construction path
+- deserialized data can omit a value that the receiving type assumes is always present
+- dictionary/map lookups can return a missing value that is passed onward without narrowing or validation
+- an API wrapper removes nullable/optional information from an underlying API
+- a value is conditionally assigned and may remain unset before later use
+- a dynamic-language function sometimes returns a real value and sometimes implicitly returns `None` / `nil`
+- an optional value is unpacked into a non-optional variable without an explicit guard
+- default arguments or fallback logic introduce a missing value without reflecting that in the declared type
+
+Typical severity:
+
+- `危険`: static analysis proves that a missing/null value reaches an operation that cannot accept it and failure is effectively certain
+- `警告`: a value can be null/missing despite a non-null contract, making runtime failure or data loss highly likely
+- `注意`: nullability is ambiguous or undocumented, but safe handling may exist elsewhere
+
+Examples:
+
+```text
+ACI2xx 警告 この関数は非null値を返す前提ですが、一部の経路で null を返す可能性があります
+```
+
+```text
+ACI1xx 危険 この値は None になる経路があり、その直後に属性へアクセスしています
+```
+
+The checker should respect language-native nullability mechanisms where available, such as:
+
+- C# nullable reference types
+- TypeScript strict null checks
+- Python `Optional` / union annotations
+- Go pointer/nil semantics
+- Rust `Option`
+- Ruby/Luau nil-aware conventions and annotations where available
+
+The rule should integrate with control-flow analysis, type inference, deserialization/schema checks, and data-flow tracking.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
