@@ -57,10 +57,51 @@ jobs:
       - name: Bootstrap self-check entry point
         run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- src
 
+  design-checkers:
+    name: design-checkers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout all-code-checker
+        uses: actions/checkout@v4
+
+      - name: Checkout UPD Commander design checker
+        uses: actions/checkout@v4
+        with:
+          repository: tomiya7688/upd-commander-base-design
+          ref: 1251d8eed5d555599d08e298220b511e426fc2e6
+          path: .ci-tools/upd-commander-base-design
+
+      - name: Checkout OOP design checker
+        uses: actions/checkout@v4
+        with:
+          repository: tomiya7688/oop-design-checker
+          ref: de30f85a84cab77b56723206424f9ad31608fe2a
+          path: .ci-tools/oop-design-checker
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: UPD Commander strict design check
+        working-directory: .ci-tools/upd-commander-base-design/support_tools/cs/upd_commander_checker
+        run: >
+          dotnet run --project UpdCommanderChecker.csproj -c Release --
+          --warnings-as-errors
+          --attentions-as-errors
+          "$GITHUB_WORKSPACE"
+
+      - name: OOP strict design check
+        working-directory: .ci-tools/oop-design-checker
+        run: >
+          dotnet run --project src/frontends/cui/OopDesignChecker.Cui.csproj -c Release --
+          "$GITHUB_WORKSPACE/src"
+          --fail-on attention
+
   required:
     name: required
     runs-on: ubuntu-latest
-    needs: [build, self-quality-gate]
+    needs: [build, self-quality-gate, design-checkers]
     if: ${{ always() }}
 
     steps:
@@ -69,3 +110,4 @@ jobs:
         run: |
           test '${{ needs.build.result }}' = success
           test '${{ needs.self-quality-gate.result }}' = success
+          test '${{ needs.design-checkers.result }}' = success
