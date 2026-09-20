@@ -2719,6 +2719,166 @@ This rule should integrate with:
 - event/callback analysis
 - resource lifetime checks
 - dependency/lifecycle scope analysis
+## Additional v1.0.0 checks
+
+The following checks are accepted into the v1.0.0 target scope.
+
+### Dependency and package resolution problems
+
+Detect dependency problems such as:
+
+- missing packages/modules
+- impossible or unavailable versions
+- manifest/lockfile inconsistency
+- unresolved dependency graphs
+- conflicting versions where they are likely to break runtime/build behavior
+- known severe vulnerabilities where reliable vulnerability metadata is available
+
+Typical severity:
+
+- `危険`: dependency resolution is impossible or the build/runtime cannot proceed
+- `警告`: high-risk version conflict or serious known vulnerability
+- `注意`: suspicious but non-fatal dependency inconsistency
+
+### Build/project metadata inconsistent with source
+
+Detect project/build definitions that reference invalid or missing resources.
+
+Examples include:
+
+- project files referencing files that do not exist
+- CMake/build definitions referencing missing sources
+- scripts invoking commands that are not defined
+- project references pointing to missing projects
+- stale build metadata after file moves/renames
+
+Typical severity:
+
+- `危険`: build failure is effectively certain
+- `警告`: metadata is likely stale or partially broken
+- `注意`: non-fatal inconsistency worth reviewing
+
+### Integer overflow and underflow
+
+Detect arithmetic whose result may exceed the representable range.
+
+Important contexts include:
+
+- index calculations
+- buffer sizes
+- allocation sizes
+- timeout/time calculations
+- counters
+- length/offset arithmetic
+- numeric protocol fields
+
+Typical severity:
+
+- `危険`: overflow/underflow is statically certain
+- `警告`: realistic input can exceed the valid range
+- `注意`: arithmetic is close to a boundary or relies on implicit wrapping semantics
+
+### Infinite loops and non-terminating recursion
+
+Detect control flow that cannot terminate or is highly likely not to terminate.
+
+Candidate patterns include:
+
+- loop conditions that never change
+- unconditional loops with no reachable exit
+- recursive calls with no reachable base case
+- recursion where the termination argument does not move toward the base condition
+- mutually recursive functions with no terminating path
+
+Typical severity:
+
+- `危険`: non-termination is statically proven
+- `警告`: termination is highly doubtful
+- `注意`: recursion/looping structure is fragile but not proven infinite
+
+### Dangerous regular expressions
+
+Detect regex patterns likely to cause extreme backtracking or pathological runtime behavior.
+
+Candidate patterns include:
+
+- nested ambiguous quantifiers
+- repeated overlapping alternations
+- catastrophic backtracking patterns
+- regexes applied to untrusted/unbounded input with poor complexity
+
+Typical severity:
+
+- `警告`: realistic input can cause severe performance degradation or denial-of-service-like behavior
+- `注意`: regex is unusually complex and deserves review
+- `危険`: only if catastrophic behavior is effectively proven for reachable input
+
+### Resource exhaustion risks
+
+Detect operations that may consume unbounded or excessive resources.
+
+Candidate patterns include:
+
+- reading unbounded input fully into memory
+- allocation sizes controlled directly by external input
+- unbounded task/thread/process creation
+- unbounded queue/cache/list growth
+- recursive expansion without limits
+- retry loops without caps/backoff
+- unbounded file extraction/decompression
+- accumulation loops with no size guard
+
+Typical severity:
+
+- `危険`: exhaustion is effectively certain for reachable execution
+- `警告`: unbounded growth is realistic and likely to cause failure
+- `注意`: missing guard/limit is worth reviewing
+
+### TOCTOU and stale-state assumptions
+
+Detect time-of-check/time-of-use patterns where external state can change between validation and use.
+
+Examples include:
+
+- checking file existence and later opening the file
+- validating permissions and later using the resource
+- checking external process/resource state and assuming it remains unchanged
+- verifying a path then using it after a gap or callback
+- checking a shared object before another thread/task may modify it
+
+Typical severity:
+
+- `警告`: stale-state race is realistic and can cause correctness/security problems
+- `注意`: check/use separation is fragile but impact is limited
+- `危険`: only when the broken assumption is statically certain
+
+### Test discovery problems
+
+Detect situations where tests exist but are not actually being executed.
+
+Candidate patterns include:
+
+- test files are present but the test runner reports zero discovered tests
+- test project exists but is excluded from the active solution/build
+- naming/configuration prevents test discovery
+- tests are filtered out unintentionally
+- test command succeeds without running expected test assemblies/files
+- test framework configuration points to the wrong path/pattern
+
+Typical severity:
+
+- `警告`: tests exist but none or only an unexpectedly small subset are executed
+- `注意`: test discovery/configuration appears suspicious but may be intentional
+- `危険`: only when required tests are definitively skipped and the CI result is therefore invalid
+
+Example:
+
+```text
+ACI2xx 警告 テストファイルが存在しますが、実行されたテストは0件です。テスト検出設定を確認してください
+```
+
+These checks are part of the v1.0.0 target scope and should be prioritized after the core parsing/semantic-analysis foundation is stable.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
