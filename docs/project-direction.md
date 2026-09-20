@@ -1810,6 +1810,75 @@ The checker should consider:
 
 A narrowing conversion should not be reported when static analysis can prove the source value always fits safely in the destination type.
 
+## Implicit type conversion without explicit cast
+
+The checker should detect implicit type conversions that may change value meaning, precision, range, sign, representation, or runtime interpretation even though no explicit cast is written.
+
+This rule is related to narrowing conversion, but focuses specifically on conversions that happen implicitly and may therefore be overlooked during review.
+
+Candidate patterns include:
+
+- implicit numeric narrowing or precision loss
+- signed/unsigned conversion
+- integer/floating-point conversion
+- enum/integer conversion
+- object/interface/base-type conversion that loses useful type guarantees
+- string/number or string/enum coercion where the language allows it
+- truthy/falsy coercion that materially changes semantics
+- implicit boxing/unboxing or wrapper conversion where runtime failure is possible
+- overload resolution selecting a conversion path that is surprising or lossy
+
+Typical severity:
+
+- `注意`: an implicit conversion occurs and may deserve review
+- `警告`: the conversion has a high probability of precision loss, sign/range change, or unintended semantic change
+- `危険`: only when static analysis can prove the conversion produces an invalid or broken result
+
+The checker should consider prior range checks, language rules, target type guarantees, and whether the conversion is lossless.
+
+A safe widening conversion should not be reported merely because it is implicit.
+
+## Unsafe reference reinterpretation / pointer hacks
+
+The checker should detect dangerous low-level reference reinterpretation patterns that bypass the language's normal type and lifetime safety guarantees.
+
+This is a cross-language concept, though it is expected to appear most often in C++, Rust `unsafe`, C# `unsafe`, interop code, and other low-level APIs.
+
+Candidate patterns include:
+
+- reinterpret-style casts between unrelated pointer/reference types
+- forcing one object's memory to be viewed as an unrelated type
+- pointer punning that violates alignment or object-layout guarantees
+- fabricating references from raw addresses without proving validity
+- converting integers to pointers/references and dereferencing them
+- bypassing ownership/lifetime guarantees through unsafe helpers
+- retaining references to memory after the original owner is invalidated
+- aliasing mutable references in ways forbidden by the language/runtime model
+- creating references to improperly aligned memory
+- accessing memory using a type incompatible with the actual stored representation
+- using pointer arithmetic to reach unrelated objects
+- transmute/bit-cast-like operations where size/layout/validity constraints are not satisfied
+
+Typical severity:
+
+- `危険`: invalid lifetime, alignment, object representation, or dereference is statically proven or undefined behavior is effectively certain
+- `警告`: the hack bypasses normal safety guarantees and the required invariants are not demonstrated
+- `注意`: the low-level conversion may be intentional and appears guarded, but is still worth review
+
+The checker should not flag every low-level cast or interop operation. It should focus on cases where required invariants such as size, alignment, lifetime, ownership, nullability, or object representation are missing or contradicted.
+
+Examples:
+
+```text
+ACI2xx 警告 型安全性を回避した参照変換が行われています。対象メモリの型・サイズ・寿命が保証されているか確認してください
+```
+
+```text
+ACI1xx 危険 この参照は寿命切れのメモリを指しているため、安全に利用できません
+```
+
+This rule family should integrate with the broader reference, ownership, and lifetime safety analysis.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
