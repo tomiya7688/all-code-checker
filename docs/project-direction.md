@@ -1522,6 +1522,45 @@ Where a test environment is available, the checker may optionally repeat determi
 
 The checker must avoid flagging functions merely because they call time-, random-, I/O-, or concurrency-related APIs when such behavior is clearly part of their intended contract.
 
+## Analysis failure
+
+If the checker cannot analyze an input that is expected to be supported, this is classified as `危険`.
+
+The checker must not present a successful result when parsing, project resolution, semantic analysis, or analyzer execution failed in a way that prevents reliable checking.
+
+Examples include:
+
+- source parsing fails unexpectedly
+- project/solution resolution fails
+- required analyzer process crashes
+- semantic model construction fails
+- dependency/project graph resolution fails
+- an internal analyzer error prevents part of the selected scope from being checked
+- configuration loading fails in a way that prevents analysis
+- the checker cannot determine whether a supported source file was analyzed correctly
+
+Example diagnostic:
+
+```text
+ACI0xx 危険 解析に失敗したため、この入力を正常に検査できませんでした
+```
+
+The checker should distinguish between:
+
+1. **unsupported input/language**
+   - the language or format is not yet supported by the current checker version
+   - this should be reported explicitly as unsupported rather than pretending analysis was attempted successfully
+
+2. **supported input but analysis failed**
+   - the checker is expected to support the language/project, but parsing or analysis could not complete
+   - this is `危険`
+
+3. **partial analysis**
+   - only part of the selected project could be analyzed
+   - if the missing portion is relevant to the selected scope, the overall result should be treated as `危険` because the check is incomplete
+
+Analysis failure should also cause the checker run to be considered unsuccessful.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
