@@ -25,6 +25,10 @@ Planned after v1.0.0:
 
 - Rust
 - C++
+- Luau
+- Ruby
+
+Luau and Ruby are lower-priority than the initial v1.0.0 languages, but are still important because some projects may embed them as application scripting or modding languages. The checker should eventually analyze such embedded script code as first-class source input rather than assuming that only the host application's primary language matters.
 
 Planned when the Bitlang project has progressed enough:
 
@@ -43,6 +47,7 @@ From the current active repository set:
 - TypeScript is included because its structural type system makes it especially useful for developing semantic-safety checks, even when it is not the dominant language in the current repository set.
 - C++ is present in several active repositories, but is intentionally deferred until after v1.0.0 to keep the first implementation scope manageable.
 - Rust currently has lower usage and is also planned for post-v1.0.0 support.
+- Luau and Ruby may appear inside otherwise unrelated applications as embedded scripting or mod languages, so they are planned as later expansion targets even when they are not the repository's primary implementation language.
 - Bitlang support will be added when the language and compiler project are mature enough to expose a stable analysis surface.
 
 This ordering is therefore driven by both real-world usage and the value each language provides for validating the checker's architecture.
