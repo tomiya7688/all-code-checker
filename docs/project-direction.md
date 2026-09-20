@@ -413,6 +413,146 @@ Suggested behavior:
 - promote to `警告` only at a substantially deeper threshold or when deep nesting is combined with many branches
 - do not prescribe a specific refactoring; only report the measurable nesting condition
 
+## Additional rule families accepted for implementation
+
+The following rule families are accepted as part of the project's intended scope.
+
+### Ignored return values and errors
+
+Detect important return values or error objects that are discarded even though the called API indicates they should be checked.
+
+Examples include:
+
+- ignored `error` values in Go
+- discarded status/result values
+- ignored failure-return values
+- APIs marked or documented as requiring result handling
+
+Typical severity:
+
+- `警告`: failure handling is likely required and ignoring the result can easily create bugs
+- `注意`: the result is review-worthy but not clearly mandatory
+- `危険`: only when ignoring the result makes failure effectively certain
+
+### Swallowed exceptions and errors
+
+Detect error handling that suppresses failures without meaningful handling.
+
+Examples include:
+
+- empty `catch`
+- `except: pass`
+- receiving an error and doing nothing
+- logging nothing and returning success after a failed operation
+- broad exception handlers that silently continue
+
+Typical severity:
+
+- `警告` by default
+- `注意` when intentional suppression is plausible
+- `危険` when the suppressed failure makes incorrect behavior effectively certain
+
+### Conditions that are always true or always false
+
+Detect conditions that can be proven from static analysis to never change result.
+
+Examples include:
+
+- comparisons against compile-time constants that are impossible
+- contradictory boolean expressions
+- branches made unreachable by previous conditions
+- repeated range checks that cannot both be true
+- null checks on values statically known to be non-null or null
+
+Typical severity:
+
+- `危険`: the condition is statically proven and indicates broken logic
+- `警告`: the condition is highly likely to be constant but depends on incomplete analysis
+
+### Variable and symbol shadowing
+
+Detect inner-scope declarations that hide outer variables, parameters, imported names, or other visible symbols in ways that can cause confusion or accidental misuse.
+
+Typical severity:
+
+- `注意` by default
+- `警告` when the shadowed and shadowing symbols have different types, meanings, or are very close in scope and likely to be confused
+
+### Excessive parameter count
+
+Detect functions or methods with unusually many parameters.
+
+This is advisory and should not be treated as a design error by itself.
+
+Typical severity:
+
+- `注意` by default
+- `警告` only when combined with other strong signals such as many same-typed adjacent parameters, very high function complexity, or a large number of optional/boolean control parameters
+- `危険` is not used for parameter count alone
+
+### Same-type argument swap risk
+
+Detect APIs where multiple adjacent arguments have the same or compatible types and are easy to accidentally swap.
+
+Examples include:
+
+```text
+move(x, y, width, height)
+copy(source, destination)
+connect(host, user, database)
+```
+
+This rule should use parameter names, argument names, types, and call-site context where available.
+
+Typical severity:
+
+- `注意` by default
+- `警告` when a call site's argument names or data flow strongly suggest that arguments may have been reversed
+- `危険` only when the swap can be proven to produce invalid behavior
+
+### Resource release leaks
+
+Detect execution paths where acquired resources are not released correctly.
+
+Examples include:
+
+- file handles
+- sockets
+- database connections
+- locks
+- streams
+- temporary resources
+- disposable/closable objects
+
+Typical severity:
+
+- `危険`: a release leak is statically certain on an execution path
+- `警告`: a leak is highly likely
+- `注意`: resource lifetime is ambiguous and worth review
+
+### Async and concurrency misuse
+
+Detect common async/concurrency patterns that are valid syntax but likely to misbehave.
+
+Examples include:
+
+- missing `await`
+- fire-and-forget operations with lost failures
+- synchronously blocking on asynchronous work
+- ignored task/future/promise errors
+- lock misuse
+- obvious deadlock-prone ordering when statically inferable
+- async callbacks passed to APIs that do not await them
+- concurrent mutation without the expected synchronization where strongly detectable
+
+Typical severity:
+
+- `危険`: failure/deadlock/lost execution is effectively certain
+- `警告`: the pattern has a high probability of creating a runtime bug
+- `注意`: the pattern is suspicious but depends on surrounding runtime behavior
+
+These rules should be implemented incrementally and language-by-language. A rule may exist conceptually across all supported languages even when only some language adapters can enforce it at first.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
