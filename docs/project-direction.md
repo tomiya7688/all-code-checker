@@ -2665,6 +2665,60 @@ ACI2xx 警告 この行は極端に長く、テキストエディタや差分ツ
 
 The threshold should be configurable and may differ by file type.
 
+## Scope-escaping and out-of-scope references
+
+The checker should detect references that are used, retained, captured, or exposed beyond the scope/lifetime where they are valid or semantically intended to exist.
+
+This includes both hard invalid-scope errors and softer scope-escape patterns that may compile but create stale, unsafe, or unintended references.
+
+Candidate patterns include:
+
+- references to values whose lexical/lifetime scope has already ended
+- closures capturing mutable locals that outlive the intended operation
+- callbacks retaining references to short-lived objects
+- event handlers keeping objects alive beyond their intended scope
+- storing request/session-scoped objects in global/static state
+- returning references/views/spans into temporary or short-lived storage
+- caching references to objects that are only valid during one operation
+- async tasks retaining values whose validity ends before the task completes
+- passing scoped/service-lifetime objects into longer-lived components
+- exposing internal/local objects through APIs that allow them to escape their intended ownership boundary
+- unsafe/reference-based access that bypasses ordinary scope/lifetime guarantees
+- reusing a reference after the owning scope has reset, recycled, disposed, or invalidated the underlying state
+
+Typical severity:
+
+- `危険`: the reference is statically proven invalid, expired, disposed, or otherwise unusable at the point of access
+- `警告`: a shorter-lived value escapes into a longer-lived scope and stale/invalid use is highly likely
+- `注意`: the reference crosses a scope boundary in a way that is unusual or review-worthy but may be intentional
+
+Examples:
+
+```text
+ACI1xx 危険 この参照は有効期間を過ぎた値を指しているため、安全に利用できません
+```
+
+```text
+ACI2xx 警告 短いライフタイムのオブジェクトが長寿命のオブジェクトに保持されています
+```
+
+```text
+ACI2xx 注意 ローカル変数が長時間生存するコールバックに捕捉されています。意図したスコープか確認してください
+```
+
+The checker should distinguish:
+
+1. language-level invalid scope access that should already fail compilation/type checking
+2. lifetime/scope escape that remains technically valid but is risky
+3. intentional capture/retention patterns that are safe by design
+
+This rule should integrate with:
+
+- reference/ownership/lifetime safety
+- async/concurrency analysis
+- event/callback analysis
+- resource lifetime checks
+- dependency/lifecycle scope analysis
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
