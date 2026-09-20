@@ -1601,6 +1601,46 @@ For example, if `注意` is disabled and the project only contains notice-level 
 
 The exact CI exit-code mapping can be defined separately, but the human-readable overall result should follow this strongest-severity aggregation model.
 
+## Unsafe password and secret input handling
+
+The checker should detect password/secret input patterns that are likely to expose sensitive values or handle them unsafely.
+
+This category is advisory by default.
+
+Candidate patterns include:
+
+- password input fields that are not masked when the framework/API provides a masking option
+- accepting passwords or API secrets through command-line arguments where they may be visible in process listings/history
+- putting passwords or secrets in URLs or query strings
+- logging password/secret values
+- printing secrets to console/debug output
+- storing entered passwords directly into plaintext configuration files
+- copying secrets into broadly scoped variables or global state without a clear need
+- passing secrets through multiple unrelated layers or callbacks where exposure risk increases
+- storing secrets in temporary files without protection
+- placing secrets in exception messages or diagnostic output
+- reading passwords from insecure default input paths when a safer secret/password API is available
+
+Typical severity:
+
+- `注意`: the input/handling path is weaker than recommended or unnecessarily exposes the secret to more code/state
+- `警告`: the pattern creates a high likelihood of secret disclosure, such as command-line exposure, plaintext logging, URL/query-string transmission, or plaintext persistence
+- `危険`: not normally used for handling style alone; a separately provable direct secret leak may be classified by a stronger security rule
+
+The checker should avoid flagging ordinary password variables merely because they contain strings. Diagnostics should require evidence from the input channel, output channel, storage location, logging behavior, or data-flow path.
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 パスワード入力が通常のテキスト入力として扱われています。マスク入力が利用できないか確認してください
+```
+
+```text
+ACI2xx 警告 パスワードがコマンドライン引数として渡されています。履歴やプロセス情報から露出する可能性があります
+```
+
+This rule family should later integrate with broader secret-handling and security checks.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
