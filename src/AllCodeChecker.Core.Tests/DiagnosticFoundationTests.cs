@@ -1,3 +1,4 @@
+using Xunit;
 using AllCodeChecker.Diagnostics;
 using AllCodeChecker.Results;
 using AllCodeChecker.Rules;
