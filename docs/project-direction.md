@@ -264,3 +264,46 @@ The first concrete milestone is:
 > For TypeScript, C#, Python, and Go, detect obvious source-level errors without requiring a full project build whenever the language tooling makes that possible.
 
 Once that foundation is reliable, semantic-safety rules can be added incrementally.
+
+
+## Layer 2: High-risk operations likely to fail or misbehave
+
+After compile-free obvious error detection, the next priority is code that is syntactically valid and may compile, but has a high probability of failing at runtime, doing nothing useful, or behaving differently from what the author likely intended.
+
+This layer should focus on patterns with a strong static signal rather than subjective style preferences.
+
+Candidate examples include:
+
+- accessing an index that can be proven or strongly inferred to be out of range
+- dereferencing or calling through a value that can be null / nil / None on the current path
+- dividing by a value that can be proven to be zero
+- using a file, stream, socket, iterator, or other resource after it has been closed or disposed
+- performing operations on an object before required initialization
+- ignoring an error/result in APIs where failure handling is essential
+- calling blocking operations from contexts where they are highly likely to deadlock or stall
+- mutating a collection while iterating over it when the language/runtime semantics make this unsafe
+- using a value after move / invalidation / ownership transfer where detectable
+- using obviously invalid path, URL, format, encoding, or conversion operations when the relevant value is statically known
+- impossible or contradictory conditions that indicate dead code or a logic mistake
+- API calls whose arguments form a combination that is valid by type but very likely invalid semantically
+
+The intended distinction is:
+
+```text
+Layer 1:
+"This is already invalid or will almost certainly be rejected by the language/toolchain."
+
+Layer 2:
+"This is valid code, but the operation is highly likely to fail or not behave as intended."
+
+Layer 3:
+"This may work, but it is semantically dangerous or crosses conceptual boundaries."
+```
+
+Layer 2 diagnostics should generally require stronger evidence than ordinary heuristic lint rules. The checker should prefer low false-positive rates even if that means missing some cases.
+
+A likely severity mapping is:
+
+- error: failure is effectively certain from static evidence
+- warning: failure or misbehavior is highly probable
+- info: suspicious operation worth review, but evidence is weaker
