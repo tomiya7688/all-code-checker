@@ -2214,6 +2214,49 @@ ACI2xx 警告 この変数は途中で文字列に変更されていますが、
 
 This rule should use control-flow and data-flow analysis so that mutually exclusive branches are not treated as accidental type changes when the language's narrowing/guard logic makes usage safe.
 
+## Deadlock risks in synchronous execution
+
+The checker should detect synchronous locking/waiting patterns that can cause deadlocks.
+
+This category applies to thread locks, monitors, mutexes, semaphores, synchronous waits, and equivalent language/runtime primitives.
+
+Candidate patterns include:
+
+- lock-order inversion across different code paths
+- two or more locks acquired in inconsistent order
+- synchronous waiting while holding a lock required by the awaited operation
+- blocking on asynchronous work with `.Result`, `.Wait()`, or equivalent APIs in a synchronization-context-sensitive environment
+- re-entering a non-reentrant lock from the same execution flow
+- mutually waiting worker/thread relationships
+- nested lock acquisition where another reachable path acquires the same locks in reverse order
+- waiting on a condition/event that can only be signaled by code blocked on the current lock
+- synchronous callback invocation while holding a lock when the callback can re-enter the locked code
+- lock acquisition in destructors/finalizers/cleanup paths that can participate in existing lock cycles
+
+Typical severity:
+
+- `危険`: the wait-for/lock graph contains a statically proven cycle or deadlock is effectively certain
+- `警告`: lock ordering or blocking behavior makes deadlock highly probable
+- `注意`: the locking pattern is complex or fragile enough to deserve review but no concrete cycle is proven
+
+The checker should model lock acquisition order and, where practical, construct a wait-for graph.
+
+Example diagnostics:
+
+```text
+ACI1xx 危険 LockA → LockB と LockB → LockA の取得経路が存在し、デッドロックが発生します
+```
+
+```text
+ACI2xx 警告 ロック保持中に同期的な待機を行っており、待機先が同じロックを必要とする可能性があります
+```
+
+```text
+ACI2xx 注意 複数のロックをネストして取得しています。取得順序がプロジェクト内で一貫しているか確認してください
+```
+
+This rule should integrate with async/concurrency misuse analysis but remain separately identifiable because synchronous deadlocks can occur without async code.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
