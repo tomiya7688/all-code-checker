@@ -1,0 +1,71 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+
+      - name: Build self
+        run: dotnet build src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-restore
+
+      - name: CLI smoke test
+        run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- .
+
+  self-quality-gate:
+    name: self-quality-gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+
+      - name: Build with strict .NET analyzers
+        run: >
+          dotnet build src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+          -c Release
+          --no-restore
+          -p:EnableNETAnalyzers=true
+          -p:AnalysisLevel=latest-recommended
+          -p:EnforceCodeStyleInBuild=true
+          -p:TreatWarningsAsErrors=true
+
+      - name: Bootstrap self-check entry point
+        run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- src
+
+  required:
+    name: required
+    runs-on: ubuntu-latest
+    needs: [build, self-quality-gate]
+    if: ${{ always() }}
+
+    steps:
+      - name: Require all CI gates
+        shell: bash
+        run: |
+          test '${{ needs.build.result }}' = success
+          test '${{ needs.self-quality-gate.result }}' = success

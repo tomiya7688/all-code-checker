@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>AllCodeChecker.Core</AssemblyName>
+    <RootNamespace>AllCodeChecker</RootNamespace>
+  </PropertyGroup>
+</Project>

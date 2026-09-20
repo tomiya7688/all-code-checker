@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>all-code-checker</AssemblyName>
+    <RootNamespace>AllCodeChecker.Cli</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AllCodeChecker.Core/AllCodeChecker.Core.csproj" />
+  </ItemGroup>
+</Project>
