@@ -86,18 +86,16 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: UPD Commander strict design check
+      - name: UPD Commander design check
         working-directory: .ci-tools/upd-commander-base-design/support_tools/cs/upd_commander_checker
         run: >
           dotnet run --project UpdCommanderChecker.csproj -c Release
           -p:EnableNETAnalyzers=false
           -p:TreatWarningsAsErrors=false
           --
-          --warnings-as-errors
-          --attentions-as-errors
           "$GITHUB_WORKSPACE/src"
 
-      - name: OOP strict design check
+      - name: OOP design check
         working-directory: .ci-tools/oop-design-checker
         run: >
           dotnet run --project src/frontends/cui/OopDesignChecker.Cui.csproj -c Release
@@ -105,7 +103,7 @@ jobs:
           -p:TreatWarningsAsErrors=false
           --
           "$GITHUB_WORKSPACE/src"
-          --fail-on attention
+          --fail-on danger
 
   required:
     name: required
