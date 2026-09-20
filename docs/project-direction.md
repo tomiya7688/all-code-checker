@@ -1709,6 +1709,55 @@ ACI2xx 注意 ランダムな出力を意図しているようですが、現在
 
 This rule is about accidental loss of randomness, not cryptographic randomness requirements. Security-sensitive randomness should be handled by separate security rules.
 
+## Unsafe character encoding conversion
+
+The checker should detect character-encoding conversions that are likely to introduce data loss, mojibake, decoding failures, or environment-dependent behavior.
+
+This category should primarily emit `警告`.
+
+Candidate patterns include:
+
+- converting between encodings with incompatible representable character sets without validation
+- relying on platform/default encodings such as system locale-dependent defaults
+- decoding bytes without an explicit or reliably inferred encoding
+- encoding text with fallback/replacement behavior that silently substitutes unsupported characters
+- decoding invalid byte sequences while silently replacing errors
+- converting UTF-8 text through a legacy encoding and back without proving round-trip safety
+- assuming BOM presence/absence incorrectly
+- treating arbitrary binary data as text
+- converting between byte arrays and strings using mismatched encodings
+- mixing different encodings across file read/write paths
+- reading text with one encoding and writing it with another without an explicit reason
+- using locale-sensitive or environment-sensitive encoding APIs in portable code
+- truncating or slicing encoded byte sequences in ways that can split multi-byte characters
+
+Typical severity:
+
+- `警告`: the conversion has a high probability of causing character corruption, loss, or environment-dependent bugs
+- `注意`: the conversion is suspicious or underspecified but may be intentional
+- `危険`: only when data corruption or decode failure is statically certain
+
+The checker should consider context such as:
+
+- source and destination encoding
+- API fallback behavior
+- whether all possible input characters are representable
+- whether the code verifies round-trip integrity
+- whether the file/protocol format explicitly specifies an encoding
+- whether the project intentionally targets a legacy encoding
+
+Example diagnostics:
+
+```text
+ACI2xx 警告 この文字コード変換では表現できない文字が置換され、データが失われる可能性があります
+```
+
+```text
+ACI2xx 警告 文字コードを明示せずにデコードしているため、実行環境によって結果が変わる可能性があります
+```
+
+This rule should focus on concrete conversion risk rather than treating legacy encodings themselves as invalid.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
