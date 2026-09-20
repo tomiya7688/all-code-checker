@@ -2307,6 +2307,47 @@ This rule should integrate with:
 - resource lifetime analysis
 - static test simulation
 
+## Meaningless or information-destroying error handling
+
+The checker should detect errors/exceptions/results that are technically handled, but whose useful information is discarded so thoroughly that the handling becomes effectively meaningless.
+
+This differs from a completely swallowed error:
+
+- swallowed error: the error is ignored entirely
+- meaningless error handling: the error is caught/received, but converted into output that loses the information needed to understand or react to the failure
+
+Candidate patterns include:
+
+- replacing every distinct error with the same generic message
+- catching an exception and returning an unrelated success/default value
+- discarding error codes, stack/context information, or failure causes without a clear reason
+- converting multiple failure kinds into one indistinguishable boolean/value when callers need to react differently
+- logging only a generic message while dropping the actual error object
+- rethrowing a new error without preserving the original cause/context where the language supports chaining
+- overwriting an existing error with another value before it is observed
+- transforming an error into a value that callers interpret as normal output
+- creating an error/result object and then immediately discarding it without any effect
+
+Typical severity:
+
+- `注意`: useful diagnostic/error context is lost, but the program may still behave acceptably
+- `警告`: the lost information makes correct recovery, diagnosis, or caller behavior highly unlikely
+- `危険`: not normally used for information loss alone unless the resulting control flow is separately proven incorrect
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 エラー情報が汎用メッセージに置き換えられており、原因の特定に必要な情報が失われています
+```
+
+```text
+ACI2xx 警告 異なる失敗原因が同じ戻り値に変換されているため、呼び出し側が正しくエラー処理できない可能性があります
+```
+
+The checker should allow intentional abstraction boundaries where low-level details are deliberately hidden, especially when the original error is logged, chained, mapped to a stable domain error, or otherwise preserved appropriately.
+
+This rule should integrate with swallowed-error detection and incomplete error-handling analysis.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
