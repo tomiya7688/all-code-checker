@@ -2618,6 +2618,53 @@ This rule should integrate with:
 - schema/serialization checks
 - static data-flow analysis
 - resource/file/path analysis
+## Excessively long single lines
+
+The checker should detect source/text lines that are so long that they become hazardous for editing, reviewing, diffing, tooling, or parser/editor performance.
+
+This is not primarily a style rule. The target is extreme line length that can create practical problems.
+
+Candidate cases include:
+
+- extremely long source-code lines
+- generated-looking but non-generated single-line blobs inside normal source
+- huge inline string literals
+- embedded serialized data inside source files
+- very large one-line expressions
+- one-line files that contain substantial logic
+- long template/markup/script lines that are difficult for editors and diff tools to handle
+- accidental minification in files that are expected to remain human-edited
+
+Typical severity:
+
+- `注意`: the line is unusually long and materially harms readability/editability
+- `警告`: the line is extremely long and likely to cause editor, diff, formatter, parser, or review problems
+- `危険`: not normally used for line length alone
+
+The checker should avoid flagging known intentional cases such as:
+
+- minified files
+- generated code
+- vendored third-party assets
+- source maps
+- base64/binary payloads
+- lockfiles or machine-generated metadata
+- intentionally embedded data files
+
+Where practical, exclusions should be inferred from file type, generated-code markers, minified naming conventions, or project configuration.
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 この行は非常に長く、編集・レビューが困難になる可能性があります
+```
+
+```text
+ACI2xx 警告 この行は極端に長く、テキストエディタや差分ツールの動作に悪影響を与える可能性があります
+```
+
+The threshold should be configurable and may differ by file type.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
