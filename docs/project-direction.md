@@ -665,6 +665,102 @@ The checker should distinguish clearly between:
 
 Static simulation must not claim runtime certainty when external I/O, reflection, dynamic loading, native calls, concurrency, randomness, time-dependent behavior, or other runtime-only state prevents reliable analysis.
 
+## Configuration file validation
+
+The checker should also validate configuration and data files that are consumed by the project.
+
+### JSON
+
+JSON support should include more than syntax validation.
+
+The checker should attempt to detect:
+
+- invalid JSON syntax
+- duplicate or suspicious keys where relevant
+- available JSON Schema files
+- schema declarations such as `$schema`
+- project-local mappings between JSON files and schemas
+- code locations where each JSON file is loaded or consumed
+- mismatches between the JSON structure and the consuming code when statically inferable
+- required fields that are missing according to schema or known access patterns
+- fields with incompatible types
+- values that violate enum/range/pattern constraints from JSON Schema
+- configuration files that appear unused
+- code that assumes fields which the JSON/schema does not guarantee
+
+When a JSON Schema is available, schema validation should be preferred over heuristic inference.
+
+When no schema is available, the checker may still infer expected structure from project code that reads the JSON.
+
+Example flow:
+
+```text
+config.json
+  ↓
+detect JSON Schema if available
+  ↓
+find project code that loads config.json
+  ↓
+compare schema + actual JSON + code access patterns
+  ↓
+emit diagnostics
+```
+
+Suggested severity:
+
+- `危険`: invalid JSON, definite schema violation, or a statically certain mismatch that will prevent correct loading
+- `警告`: the configuration is likely incompatible with the consuming code or expected schema
+- `注意`: suspicious/unused keys, missing documentation/schema, or ambiguous configuration usage
+
+### INI
+
+INI files should also be supported as configuration inputs.
+
+Candidate checks include:
+
+- malformed section/key syntax
+- duplicate sections or keys
+- missing sections/keys required by consuming code
+- invalid values when expected types can be inferred
+- keys that are read by the code but absent from the file
+- keys present in the file but never referenced
+- inconsistent naming/casing where the parser semantics make this relevant
+- project code loading a different INI file than expected
+
+INI does not have one universal schema standard comparable to JSON Schema, so structure may need to be inferred from:
+
+- project code
+- application defaults
+- templates/example config files
+- explicit checker configuration
+
+Suggested severity follows the same model:
+
+- `危険`: parse failure or definite required-value mismatch
+- `警告`: high-confidence incompatibility with consuming code
+- `注意`: unused, ambiguous, undocumented, or suspicious configuration
+
+### Future configuration formats
+
+The configuration-analysis subsystem should be designed so that additional formats can be added later without changing the core model.
+
+Likely future formats include:
+
+- YAML
+- TOML
+
+The core abstraction should therefore separate:
+
+```text
+file format parsing
+schema / expected-structure discovery
+project load-site discovery
+value/type validation
+diagnostic generation
+```
+
+This allows JSON, INI, and future configuration formats to share the same project-level analysis pipeline.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
