@@ -595,6 +595,36 @@ when enabled:
 
 Exact UI and configuration syntax can be decided later.
 
+## Unit / function-level test execution
+
+The checker should also support ordinary CI-style unit testing and function-level test execution.
+
+This is not a special static-analysis feature. It should behave similarly to common CI checkers: detect the project's existing test setup, run the appropriate test command or framework, collect failures, and normalize the results into the all-code-checker diagnostic/reporting model.
+
+The checker should prefer existing project configuration and test frameworks rather than imposing a new test system.
+
+Examples may include:
+
+- TypeScript / JavaScript: project-defined test scripts and frameworks such as Vitest, Jest, or equivalent
+- C#: .NET test projects
+- Python: pytest, unittest, or project-defined runners
+- Go: `go test`
+
+Future language adapters should provide equivalent behavior for their ecosystems.
+
+The intended responsibilities are:
+
+- discover test projects / test files
+- identify the configured or conventional test runner
+- execute unit/function-level tests
+- report failed tests and execution errors
+- optionally collect coverage when the coverage option is enabled
+- preserve project-specific test configuration
+
+Test failures are ordinary CI failures and should be clearly separated from advisory static-analysis diagnostics.
+
+The exact mapping between failed test execution and the `危険 / 警告 / 注意` diagnostic system can be finalized with the overall CI exit-status design. A failed test itself should always cause the checker run to be considered unsuccessful unless the user explicitly configures otherwise.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
