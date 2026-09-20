@@ -3001,6 +3001,91 @@ ACI2xx 警告 テストファイルが存在しますが、実行されたテス
 
 These checks are part of the v1.0.0 target scope and should be prioritized after the core parsing/semantic-analysis foundation is stable.
 
+## v1.0.0 product and distribution contract
+
+The following compatibility-sensitive decisions are fixed for v1.0.0.
+
+### Configuration
+
+The standard configuration file is:
+
+```text
+all-code-checker.json
+```
+
+- format: JSON
+- search from the target path upward and use the nearest configuration
+- `--config <path>` explicitly selects a configuration
+- an explicitly selected missing/invalid configuration must fail rather than silently falling back
+
+### CUI
+
+Primary invocation:
+
+```text
+all-code-checker <target> [options]
+```
+
+Core options:
+
+```text
+--config <path>
+--no-danger
+--no-warning
+--no-notice
+--coverage
+--fail-on <danger|warning|notice|never>
+--format <text|json|sarif|github>
+--output <path>
+--version
+--help
+```
+
+All three severities are shown by default.
+
+The default CI failure threshold is `danger`. Strict repository self-check uses `--fail-on notice`.
+
+Exit codes:
+
+```text
+0  analysis succeeded and no enabled diagnostic met the failure threshold
+1  analysis succeeded and at least one enabled diagnostic met the failure threshold
+2  invocation/configuration/unsupported-input contract error
+3  checker/analyzer failure or partial analysis
+```
+
+### GUI
+
+Avalonia is the v1 GUI framework.
+
+The GUI must remain a frontend over the same checker core used by the CUI.
+
+### .NET
+
+v1.0.0 targets .NET 10.
+
+Product distribution should use self-contained publishing so users do not need to install the .NET runtime.
+
+### Portable distribution and bundled analyzers
+
+A core v1 requirement is:
+
+> Download/extract the built release package and run it without installing language-development toolchains.
+
+Source analysis must not require the user's environment to provide Node.js, Python, Go, or the .NET SDK/runtime.
+
+Planned packaging:
+
+- C#: all-code-checker itself is a self-contained .NET 10 application
+- TypeScript: bundle the Compiler API helper plus the JavaScript runtime/components required to execute it
+- Python: bundle the analyzer and required portable Python runtime/components
+- Go: prebuild the Go analyzer helper as a native executable and bundle it
+- bundled analyzers are internal implementation details and should not depend on PATH-discovered host toolchains
+
+Project-owned test execution is a separate capability. If a target project's own tests require a project-specific runtime/toolchain that is absent, source analysis must still work; only that test execution capability should be reported as unavailable.
+
+Release/package CI should validate the actual packaged artifacts, not only the source tree.
+
 ## Implementation tracking
 
 Implementation work is tracked in GitHub Issues by implementation unit rather than by one Issue per individual rule.
