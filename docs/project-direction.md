@@ -2394,6 +2394,64 @@ The checker should respect language-native nullability mechanisms where availabl
 
 The rule should integrate with control-flow analysis, type inference, deserialization/schema checks, and data-flow tracking.
 
+## Unsafe external process execution
+
+The checker should detect external process execution patterns that are likely to create command injection, privilege, path-resolution, deadlock, blocking, or error-handling problems.
+
+This applies to APIs that launch executables, shells, subprocesses, child processes, scripts, or equivalent external commands.
+
+Candidate patterns include:
+
+- building shell commands by string concatenation with user-controlled or external input
+- passing unescaped values into a shell command line
+- invoking a shell unnecessarily when direct executable invocation is available
+- executing commands from relative or ambiguous paths where a different executable may be resolved
+- using environment-dependent executable resolution without validation
+- launching externally supplied executable paths without trust/validation checks
+- passing secrets through process arguments where they may be exposed
+- running a child process with elevated privileges without a clear need
+- ignoring process exit codes
+- reading stdout/stderr incorrectly in ways that can deadlock due to full pipes
+- synchronous process waits on latency-sensitive or UI threads
+- spawning processes without timeouts/cancellation where hangs are possible
+- failing to dispose/close process handles or streams
+- invoking commands with working-directory assumptions that are not guaranteed
+- shell metacharacters reaching the command line from dynamic input
+- executing downloaded/generated scripts without integrity or origin checks where relevant
+
+Typical severity:
+
+- `危険`: command injection or execution of unintended commands is statically proven or effectively certain
+- `警告`: process invocation is highly likely to be unsafe, injection-prone, path-ambiguous, hang-prone, or incorrectly handled
+- `注意`: the external process call is valid but fragile, underspecified, or worth reviewing
+
+Examples:
+
+```text
+ACI1xx 危険 外部入力がシェルコマンドへ直接連結されており、任意コマンドが実行される可能性があります
+```
+
+```text
+ACI2xx 警告 外部プロセスの終了コードを確認していないため、失敗を正常終了として扱う可能性があります
+```
+
+```text
+ACI2xx 注意 外部プロセスを相対パスで起動しています。実行ファイルの解決先が意図したものか確認してください
+```
+
+The checker should distinguish direct executable invocation from shell-based invocation. Direct argument-array APIs are generally safer than constructing one shell command string.
+
+The checker should also consider language/framework-specific process APIs, for example:
+
+- C#: `ProcessStartInfo`, `Process.Start`
+- Python: `subprocess`, `os.system`
+- Go: `os/exec`
+- TypeScript/JavaScript: `child_process`
+- Ruby: `system`, backticks, `Open3`
+- C++: `system`, platform process APIs
+
+This rule should integrate with secret-handling, error-handling, resource-lifetime, and deadlock/blocking analysis.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
