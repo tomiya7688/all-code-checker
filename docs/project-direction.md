@@ -1664,6 +1664,51 @@ ACI2xx 警告 パスワードがコマンドライン引数として渡されて
 
 This rule family should later integrate with broader secret-handling and security checks.
 
+## Low-quality randomness for random-output use cases
+
+The checker should detect cases where code appears to require random or sufficiently varied output, but the implementation provides weak randomness, strong unintended bias, or very limited effective entropy.
+
+This category should normally emit `注意`.
+
+The checker should not treat all biased random distributions as a problem. Intentional weighting, game-balance probabilities, rarity tables, weighted selection, reproducible seeded simulations, and other explicitly designed distributions should be ignored.
+
+Candidate problematic patterns include:
+
+- using a very small random range for a use case that appears to expect broad variation
+- repeatedly truncating or modulo-reducing random values in a way that introduces unintended bias
+- reseeding a pseudo-random generator too frequently with low-resolution time values
+- creating a new RNG for each call in environments where this can produce repeated or correlated output
+- using predictable counters or timestamps as a substitute for randomness
+- taking only low-entropy portions of a random value
+- mapping many random inputs onto very few output states without an apparent reason
+- deterministic ordering accidentally masquerading as random selection
+- selection logic where some candidates are unreachable or disproportionately likely due to implementation mistakes
+- shuffle implementations with known structural bias, where detectable
+
+Typical severity:
+
+- `注意`: randomness appears weaker or more biased than the apparent use case expects
+- `警告`: may be used only when the weak randomness is very likely to break required behavior, such as repeated collisions or nearly deterministic output
+- `危険`: not used for randomness quality alone
+
+The checker should consider contextual signals such as:
+
+- names like random/shuffle/sample/select/pick
+- surrounding comments or API contracts
+- whether outputs are expected to be evenly or broadly distributed
+- whether a weighting table or explicit probability map is present
+- whether a fixed seed is intentionally supplied for reproducibility
+
+Intentional weighting should not produce a diagnostic.
+
+Example:
+
+```text
+ACI2xx 注意 ランダムな出力を意図しているようですが、現在の実装では出力の偏りが大きくなる可能性があります
+```
+
+This rule is about accidental loss of randomness, not cryptographic randomness requirements. Security-sensitive randomness should be handled by separate security rules.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
