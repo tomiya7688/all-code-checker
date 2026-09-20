@@ -944,6 +944,104 @@ run analysis
 
 The checker should avoid scanning unrelated sibling projects unless the selected input root/project explicitly includes them.
 
+## Severity filtering
+
+Users should be able to enable or disable each diagnostic severity independently.
+
+The three user-facing severity groups are:
+
+- `危険`
+- `警告`
+- `注意`
+
+Default behavior should enable all three.
+
+Conceptually:
+
+```text
+[x] 危険
+[x] 警告
+[x] 注意
+```
+
+Disabling a severity means diagnostics at that severity are not shown in the normal result output.
+
+The internal analyzer may still perform analysis needed to determine stronger diagnostics or shared data-flow results. Severity filtering should therefore be treated primarily as output/report filtering rather than blindly disabling all analysis work associated with that level.
+
+This allows users to choose different operating styles, for example:
+
+```text
+CI gate:
+[x] 危険
+[x] 警告
+[ ] 注意
+
+strict review:
+[x] 危険
+[x] 警告
+[x] 注意
+
+critical-only:
+[x] 危険
+[ ] 警告
+[ ] 注意
+```
+
+The exact exit-code policy for enabled/disabled severities can be finalized together with CI behavior.
+
+## User interfaces
+
+The project should provide both a CUI version and a GUI version.
+
+### CUI
+
+The CUI is intended for:
+
+- CI environments
+- local terminal use
+- scripts and automation
+- GitHub Actions and other CI services
+- headless environments
+
+The CUI should accept the same project inputs defined by the input model and expose configuration options for enabled severities and optional checks.
+
+Illustrative syntax:
+
+```text
+all-code-checker ./project
+all-code-checker ./project --no-notice
+all-code-checker ./project --no-warning
+all-code-checker ./project --danger-only
+```
+
+The exact command-line option names are not fixed yet.
+
+### GUI
+
+The GUI is intended for interactive local use.
+
+It should provide, at minimum:
+
+- input selection for folder / project file / entry-point file
+- checkboxes for `危険 / 警告 / 注意`
+- optional-feature toggles such as coverage checking
+- start/check action
+- grouped diagnostic results
+- file/location information for each diagnostic
+- easy navigation from a diagnostic to the relevant source location where possible
+
+The GUI and CUI should share the same checker core rather than implementing separate analysis logic.
+
+Conceptually:
+
+```text
+            ┌───────── CUI
+checker core┤
+            └───────── GUI
+```
+
+This shared-core design is required so that the same input produces equivalent analysis results regardless of interface.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
