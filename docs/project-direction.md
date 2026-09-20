@@ -52,6 +52,40 @@ From the current active repository set:
 
 This ordering is therefore driven by both real-world usage and the value each language provides for validating the checker's architecture.
 
+
+## Multi-language repository support
+
+The checker must not assume that a repository has only one meaningful programming language.
+
+Language detection should operate on the repository contents themselves and may return multiple active languages for a single project.
+
+Examples include:
+
+- a C# application containing Luau-based mod scripts
+- a Go application embedding Ruby scripts
+- a TypeScript project with Python tooling
+- a native application with scripting files used for plugins, automation, or user extensions
+
+The repository's "primary language" is therefore not sufficient for deciding what should be analyzed.
+
+The intended model is:
+
+```text
+repository
+  ↓
+detect all relevant source languages
+  ↓
+group source files by language / project boundary
+  ↓
+run the appropriate analyzers for each group
+  ↓
+merge diagnostics into one result
+```
+
+This also means that embedded scripting languages such as Luau and Ruby should eventually be treated as first-class analysis targets, even when they represent only a small portion of the repository.
+
+Language detection should be based on source files, project metadata, and directory/project boundaries rather than relying only on repository-level language statistics.
+
 ## Analysis layers
 
 The checker is expected to grow in layers.
