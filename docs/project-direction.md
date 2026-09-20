@@ -2117,6 +2117,56 @@ ACI2xx 警告 型未指定の値に対して受け取り側が特定型前提の
 
 This rule should integrate with schema/configuration validation, data-loss checks, semantic-safety rules, and runtime validation detection.
 
+## Clearly poor or misleading names
+
+The checker should detect identifiers whose names are clearly too vague, misleading, redundant, or inconsistent with their actual role.
+
+This is a refactoring-oriented advisory rule and should normally emit `注意`.
+
+The checker should not enforce subjective naming style preferences such as camelCase vs PascalCase beyond what the language/toolchain already requires.
+
+Candidate patterns include:
+
+- meaningless names such as `tmp2`, `aaa`, `obj1`, `data2` in non-trivial scopes
+- overly generic names such as `DoThing`, `ProcessStuff`, `HandleData` where the actual responsibility is much more specific
+- duplicated/redundant names such as `DataManagerManager`
+- names that strongly contradict behavior, such as `GetUser` mutating or deleting state
+- boolean names that do not read as boolean intent and are easy to misinterpret
+- names whose suffix/prefix implies the wrong kind of object or operation
+- names copied from an older responsibility after the implementation has changed
+- numbered names used where distinct semantic roles clearly exist
+- abbreviations so opaque that nearby usage cannot disambiguate them
+- class/file/function names that no longer match their dominant behavior
+
+Typical severity:
+
+- `注意`: the name is clearly vague, misleading, or no longer representative
+- `警告`: only when the misleading name is likely to cause incorrect usage or dangerous misunderstanding
+- `危険`: not used for naming quality alone
+
+The checker should rely on contextual evidence such as:
+
+- function body behavior
+- return type
+- parameters
+- side effects
+- called APIs
+- surrounding symbol names
+- comments/docstrings
+- file/class responsibility
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 この名前は処理内容を十分に表していません。より具体的な名前にできないか確認してください
+```
+
+```text
+ACI2xx 注意 関数名は値の取得を示していますが、実際には状態変更を行っています
+```
+
+The rule should avoid flagging short conventional names in appropriate contexts, such as loop indices, coordinates, mathematical variables, or framework-defined names.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
