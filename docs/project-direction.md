@@ -235,27 +235,46 @@ Those require human judgment and context beyond static source-code evidence.
 
 Language-specific diagnostics should eventually be normalized into a common representation.
 
-Example:
+Rule identifiers use the `ACI` prefix followed by a numeric identifier.
+
+The initial human-readable output format should contain, at minimum:
+
+```text
+ACI001 危険 理由
+ACI002 警告 理由
+ACI003 注意 理由
+```
+
+The default output language is Japanese.
+
+A normalized internal representation may look like:
 
 ```json
 {
-  "rule": "ACC1003",
-  "category": "member-access",
-  "severity": "error",
+  "rule": "ACI001",
+  "severity": "危険",
   "language": "typescript",
   "file": "src/user.ts",
   "line": 42,
-  "message": "Property 'foo' does not exist on type 'User'"
+  "reason": "User 型に foo プロパティは存在しません"
 }
 ```
 
-A likely severity model is:
+Additional fields such as category, column, source range, related symbols, or suggested fixes may be added later, but the first supported output range is intentionally simple: rule code, severity, and reason.
 
-- error
-- warning
-- info
+The checker uses three user-facing severity levels:
 
-High-confidence failures belong at `error`. Semantic-risk rules may use `warning` or `info` depending on certainty.
+- 危険
+- 警告
+- 注意
+
+These are intentionally different from ordinary compiler-style `error / warning / info` levels.
+
+- `危険`: the checker has strong evidence that the code is invalid, will fail, or is otherwise highly unsafe.
+- `警告`: the code is valid, but the operation has a high probability of failing or behaving incorrectly.
+- `注意`: the pattern is suspicious or worth reviewing, but the evidence is weaker or the outcome depends more heavily on runtime/context.
+
+The default user-facing language is Japanese.
 
 ## Current implementation priority
 
@@ -302,8 +321,10 @@ Layer 3:
 
 Layer 2 diagnostics should generally require stronger evidence than ordinary heuristic lint rules. The checker should prefer low false-positive rates even if that means missing some cases.
 
-A likely severity mapping is:
+The severity mapping for this layer is:
 
-- error: failure is effectively certain from static evidence
-- warning: failure or misbehavior is highly probable
-- info: suspicious operation worth review, but evidence is weaker
+- `危険`: failure or invalid behavior is effectively certain from static evidence.
+- `警告`: failure or misbehavior is highly probable.
+- `注意`: the operation is suspicious and worth review, but evidence is weaker.
+
+In particular, Layer 2 should normally produce `警告` or `注意`, not `危険`, unless the static evidence makes failure effectively certain.
