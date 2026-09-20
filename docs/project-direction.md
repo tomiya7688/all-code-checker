@@ -553,6 +553,48 @@ Typical severity:
 
 These rules should be implemented incrementally and language-by-language. A rule may exist conceptually across all supported languages even when only some language adapters can enforce it at first.
 
+## Optional coverage checking
+
+Test coverage checking should be available as an optional feature that users can enable or disable.
+
+The intended UX is checkbox/toggle based in higher-level integrations, with an equivalent configuration option for CLI/config-file usage.
+
+Coverage checking is not mandatory for every project because:
+
+- some repositories may not have tests yet
+- some test frameworks do not expose coverage uniformly
+- generated code and integration-heavy projects may have misleading raw percentages
+- coverage percentage alone is not a correctness metric
+
+When enabled, the checker may:
+
+- run or consume the project's coverage tool
+- read line / branch / function coverage when available
+- compare results against configured thresholds
+- report missing or unexpectedly low coverage
+- exclude generated, vendored, or explicitly ignored paths
+
+Suggested severity behavior:
+
+- `注意`: coverage is below a recommended/advisory threshold
+- `警告`: coverage is substantially below a configured required threshold or has dropped significantly
+- `危険`: generally not used for coverage percentage alone
+
+A project should be able to choose whether coverage is checked and configure thresholds independently from the static-analysis rules.
+
+Conceptually:
+
+```text
+[ ] coverage check
+
+when enabled:
+  line coverage threshold
+  branch coverage threshold
+  function coverage threshold
+```
+
+Exact UI and configuration syntax can be decided later.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
