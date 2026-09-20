@@ -1328,6 +1328,51 @@ This rule family should work together with:
 - return-value/error ignoring
 - static test simulation
 
+## Unnecessarily long or indirect execution paths
+
+The checker should detect execution paths that appear to perform significantly more work, indirection, conversion, or control-flow traversal than is necessary for the apparent operation.
+
+This category is advisory and should normally emit `注意`.
+
+The checker must not assume that the shortest path is always correct. Some architectures intentionally route operations through validation, middleware, authorization, logging, transaction boundaries, event pipelines, adapters, or other required layers.
+
+Therefore, this rule should be evaluated relatively rather than by a fixed path-length threshold alone.
+
+Candidate signals include:
+
+- repeated conversions between the same or equivalent representations
+- values passed through many wrapper/helper layers without meaningful transformation
+- repeated serialization/deserialization within one logical operation
+- unnecessary round trips between modules or abstraction layers
+- repeated lookup/reload of data already available in the current flow
+- duplicated validation or normalization on the same path
+- branching that repeatedly converges back to the same operation
+- forwarding functions that add no observable behavior across several layers
+- indirect call chains substantially longer than equivalent operations elsewhere in the same project
+- repeated state read/write cycles where a simpler equivalent path exists
+
+The analysis should consider project-local context such as:
+
+- similar operations elsewhere in the repository
+- whether each intermediate layer adds validation, state changes, security checks, or other meaningful behavior
+- framework-required pipelines
+- documented architecture or conventions where discoverable
+- whether bypassing the path would change externally visible behavior
+
+Typical severity:
+
+- `注意`: the path is substantially more indirect or redundant than comparable paths and may deserve simplification
+- `警告`: generally not used by default; may be considered only when the excessive path is strongly connected to a likely performance, consistency, or failure problem
+- `危険`: not used for path inefficiency alone
+
+Example:
+
+```text
+ACI2xx 注意 この処理は同種の処理と比べて多くの中間経路を通っています。各経路が必要か確認してください
+```
+
+This rule should avoid prescriptive refactoring advice and should not classify intentional architectural routing as a defect merely because it is longer.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
