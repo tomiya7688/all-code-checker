@@ -1087,6 +1087,56 @@ checker core┤
 
 This shared-core design is required so that the same input produces equivalent analysis results regardless of interface.
 
+## Missing project / definition metadata
+
+The checker should detect when a language or project type normally requires a definition/build/project metadata file, but that file is missing.
+
+This rule must be language- and project-aware.
+
+Some languages or execution modes can be valid without an explicit project-definition file. Those cases should be treated as already defined and should not produce a diagnostic merely because a metadata file is absent.
+
+Examples of project-definition or metadata files may include:
+
+- solution/project files
+- build configuration files
+- package/dependency manifests
+- module/workspace definitions
+- language-specific project metadata
+- application manifests required by a known project type
+
+The rule should first determine whether the detected language/project mode actually requires such a file.
+
+Conceptually:
+
+```text
+detected source/project
+  ↓
+does this language/project mode require a definition file?
+  ├─ no  → treat as valid/defined
+  └─ yes
+       ↓
+     required file exists?
+       ├─ yes → continue
+       └─ no  → 警告
+```
+
+Typical severity:
+
+- `警告`: a required project/definition file is missing and normal build, dependency resolution, or project discovery is likely to fail or behave incorrectly.
+- `注意`: may be used only when the file is conventional rather than strictly required.
+- `危険`: should generally not be used for absence alone unless the checker can prove that execution/build is impossible.
+
+The checker should avoid assuming that every source tree needs a project file.
+
+Examples:
+
+- a standalone script language file may be valid without a project manifest
+- a single-file program may be valid in languages that support standalone execution
+- a recognized solution/project format may require its referenced project files to exist
+- a package/module mode may require its manifest or module definition
+
+The exact required-file rules should live in each language/project adapter so they can evolve independently.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
