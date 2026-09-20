@@ -1629,6 +1629,29 @@ Typical severity:
 
 The checker should avoid flagging ordinary password variables merely because they contain strings. Diagnostics should require evidence from the input channel, output channel, storage location, logging behavior, or data-flow path.
 
+
+Context matters for this rule.
+
+Some projects, especially games, mods, local tools, prototypes, development utilities, or debug-only interfaces, may intentionally use simplified password/secret handling because the value is not protecting a real external account or production secret.
+
+The checker should therefore consider signals such as:
+
+- whether the code is debug/development-only
+- whether the application is local-only or externally exposed
+- whether the value protects a real account/service or only a local/game mechanic
+- whether the value is persisted
+- whether the value is logged or transmitted
+- whether the code path is part of authentication/authorization
+- whether the project clearly marks the mechanism as intentionally non-secure
+
+Suggested contextual behavior:
+
+- intentional local/game/debug usage with limited exposure → usually `注意` or no diagnostic
+- real authentication/secret handling with weak exposure controls → `警告`
+- clearly intentional non-security gameplay mechanics should not be treated as production credential handling
+
+The rule should report the concrete exposure risk rather than assuming that every value named "password" has the same security meaning.
+
 Example diagnostics:
 
 ```text
