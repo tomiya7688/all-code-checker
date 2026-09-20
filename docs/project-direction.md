@@ -261,6 +261,34 @@ ACI2xx 警告 この関数は非常に大きく、複雑度・分岐数・外部
 
 This rule family should avoid prescribing a specific refactoring or architecture. It should only surface measurable evidence that review may be warranted.
 
+## Future C++ pointer-safety checks
+
+When C++ support is added, the checker should include rules for dangerous pointer passing and lifetime misuse.
+
+This area may legitimately produce `危険` diagnostics when static evidence is strong enough, because pointer misuse can directly lead to undefined behavior, memory corruption, crashes, or use-after-free bugs.
+
+Candidate patterns include:
+
+- passing a pointer to an object whose lifetime ends before the callee may use it
+- returning or storing pointers/references to local stack variables
+- use-after-free or use-after-delete when detectable
+- double deletion or repeated ownership release
+- dereferencing a pointer that can be proven null
+- passing addresses of temporaries where the lifetime is insufficient
+- retaining pointers into containers across operations that may invalidate them
+- passing raw owning pointers across APIs without a clear ownership contract
+- mixing owning and non-owning pointer semantics in a way that is likely to cause invalid lifetime assumptions
+- unsafe conversion between unrelated pointer types
+- pointer arithmetic that can be proven or strongly inferred to escape the valid object/array range
+
+Suggested severity guidance:
+
+- `危険`: lifetime violation, use-after-free, double free, invalid dereference, or other undefined behavior is effectively certain from static evidence.
+- `警告`: ownership or lifetime handling is highly suspicious but not provably invalid.
+- `注意`: raw pointer passing is ambiguous or review-worthy, but there is not enough evidence to infer a likely failure.
+
+The checker should avoid treating all raw pointers as errors. C++ permits valid low-level pointer use, so diagnostics should depend on ownership, lifetime, nullability, and invalidation evidence rather than pointer syntax alone.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
