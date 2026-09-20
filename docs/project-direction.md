@@ -86,6 +86,37 @@ This also means that embedded scripting languages such as Luau and Ruby should e
 
 Language detection should be based on source files, project metadata, and directory/project boundaries rather than relying only on repository-level language statistics.
 
+
+### Real-world mixed-language cases
+
+The need for multi-language support is not hypothetical.
+
+One active project, Rowly, contains three implementation/scripting languages in the same repository:
+
+- Rust
+- Ruby
+- Luau
+
+This makes Rowly a useful future validation case for the repository-analysis architecture. A correct implementation should be able to discover all three languages, identify the relevant source/project boundaries, run the appropriate analyzers independently, and merge the resulting diagnostics.
+
+Another common repository shape is:
+
+- Python
+- C++
+
+This combination is important because it often represents a higher-level Python layer together with native code. The checker should therefore avoid assuming that language groups are unrelated simply because they use different toolchains.
+
+Future project discovery may need to recognize boundaries such as:
+
+- multiple language roots in one repository
+- embedded scripting directories
+- native extension modules
+- generated-code boundaries
+- vendored or third-party source that should not be analyzed by default
+- test fixtures or examples that may need different checking rules
+
+Rowly and Python+C++ repositories should be treated as representative acceptance cases when multi-language project discovery is implemented.
+
 ## Analysis layers
 
 The checker is expected to grow in layers.
