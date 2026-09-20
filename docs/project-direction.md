@@ -433,6 +433,29 @@ The default and v1.0.0-required user-facing language is Japanese.
 
 English output is planned for future support, but it is explicitly outside the v1.0.0 required scope.
 
+
+### Severity philosophy
+
+The three severity levels are not intended to have equal emission thresholds.
+
+- `危険` should be conservative and require strong evidence of an actual failure, invalid operation, or serious safety problem.
+- `警告` should also be relatively conservative and indicate a high probability of failure, misuse, or problematic behavior.
+- `注意` is intentionally lightweight and may be emitted much more aggressively.
+
+`注意` should be understood literally as "something worth noticing or reviewing", not as a near-error condition.
+
+This follows the same general policy used by other Tomiya-produced checkers: low-severity advisory diagnostics are allowed to be frequent as long as they remain understandable and useful.
+
+Examples appropriate for `注意` include:
+
+- no comments in a non-trivial file
+- confusing but technically valid same-name symbol resolution
+- unusually large functions that may deserve review
+- ambiguous ownership or lifecycle patterns without enough evidence for a warning
+- maintainability or readability concerns that are measurable but not necessarily wrong
+
+Users should therefore expect `注意` diagnostics to appear more often than `警告` or `危険`.
+
 ## Current implementation priority
 
 The first concrete milestone is:
