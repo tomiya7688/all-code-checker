@@ -2531,6 +2531,93 @@ This security rule family should integrate with:
 - serialization/deserialization analysis
 
 v1.0.0 should prioritize high-confidence, commonly exploitable vulnerability patterns. Broader security best-practice checks can be expanded after v1.0.0.
+## Over-trusting uncertain external information and dependencies
+
+The checker should detect cases where code trusts external, runtime-dependent, or otherwise uncertain information without sufficient validation, verification, fallback, or failure handling.
+
+This includes not only user input, but also data produced by other processes, services, files, environments, plugins, scripts, and tools.
+
+Candidate external/uncertain sources include:
+
+- external process stdout/stderr
+- external process exit codes
+- network/API responses
+- environment variables
+- configuration files
+- files created by other applications
+- IPC/shared-memory/message-queue payloads
+- plugin/mod/script outputs
+- database contents not controlled by the current code path
+- command/tool output
+- OS/runtime information
+- package/toolchain discovery results
+- timestamps, file metadata, and filesystem state
+- cached values produced outside the current execution path
+
+Candidate problematic patterns include:
+
+- parsing external process output with no validation
+- assuming a command succeeded because output exists while ignoring the exit code
+- trusting JSON/text from another process without schema/shape validation
+- directly using environment variables as paths, URLs, ports, or identifiers without checking them
+- assuming files created by another process always exist or are complete
+- depending on one external tool/process with no failure path or fallback
+- treating remote responses as complete and trustworthy without required-field checks
+- assuming version-dependent output formats never change
+- using external data as control-flow or security decisions without verification
+- making core application behavior depend on an unstable external process/service
+- repeatedly querying external state instead of preserving a validated snapshot where consistency matters
+- assuming external resources remain available between validation and use
+
+Typical severity:
+
+- `注意`: external data or behavior is trusted with weak validation, but failure impact appears limited
+- `警告`: important behavior depends on uncertain external information and insufficient validation/fallback makes runtime bugs highly likely
+- `危険`: externally controlled/untrusted information is used in a way that is statically proven to cause a serious failure or security issue
+
+The checker should consider both **trust** and **dependency strength**.
+
+Conceptually:
+
+```text
+external / uncertain source
+  ↓
+is it validated?
+  ├─ yes → continue
+  └─ no
+       ↓
+how critical is the dependent operation?
+  ├─ low impact → 注意
+  └─ important / fragile → 警告
+```
+
+Examples:
+
+```text
+ACI2xx 警告 外部プロセスの出力形式を検証せず、その値を処理の前提として使用しています
+```
+
+```text
+ACI2xx 警告 この処理は外部ツールの存在と正常応答に強く依存していますが、失敗時の処理がありません
+```
+
+```text
+ACI2xx 注意 環境変数の値を検証せずに利用しています。実行環境による差異を確認してください
+```
+
+The checker should avoid assuming that all external dependencies are bad. External processes, services, plugins, and configuration are normal parts of many systems.
+
+Diagnostics should depend on concrete missing validation, unstable assumptions, or excessive dependency on information whose correctness/availability is not guaranteed.
+
+This rule should integrate with:
+
+- unsafe external process execution
+- configuration validation
+- application vulnerability detection
+- error handling
+- schema/serialization checks
+- static data-flow analysis
+- resource/file/path analysis
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
