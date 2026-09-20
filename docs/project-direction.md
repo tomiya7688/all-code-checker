@@ -834,6 +834,35 @@ probably broken / structurally suspicious
 
 Fine-grained validation and framework-specific analysis should be deferred until after v1.0.0.
 
+## Future CSS validation and cascade analysis
+
+CSS support is planned for after v1.0.0.
+
+Initial post-v1 CSS support should include ordinary syntax validation, but the more valuable checks are likely to involve cascade and priority ambiguity.
+
+Candidate checks include:
+
+- malformed CSS syntax
+- duplicate or conflicting declarations
+- selectors with unexpectedly competing specificity
+- rules whose outcome depends heavily on source order
+- excessive or conflicting `!important`
+- multiple selectors targeting the same elements with near-equal specificity
+- overrides that are valid but difficult to reason about
+- dead or effectively unreachable declarations where statically inferable
+- custom properties that are referenced but not defined in reachable scope
+- conflicting media/container-query branches where the final result is difficult to determine
+
+Suggested severity:
+
+- `危険`: definite parse failure or a statically certain invalid CSS construct
+- `警告`: cascade/specificity conflicts make the effective style ambiguous, fragile, or highly order-dependent
+- `注意`: maintainability concerns such as repeated overrides or unusually complex selector chains
+
+In particular, ambiguous priority should normally produce `警告`, not `危険`, because the stylesheet may still render successfully even when the resulting style is hard to predict or maintain.
+
+CSS support is explicitly post-v1.0.0 scope.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
