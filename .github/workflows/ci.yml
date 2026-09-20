@@ -95,7 +95,7 @@ jobs:
           --
           --warnings-as-errors
           --attentions-as-errors
-          "$GITHUB_WORKSPACE"
+          "$GITHUB_WORKSPACE/src"
 
       - name: OOP strict design check
         working-directory: .ci-tools/oop-design-checker
