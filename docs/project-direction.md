@@ -1177,6 +1177,62 @@ ACI2xx 警告 この関数の循環的複雑度が非常に高く、テスト漏
 
 Cyclomatic complexity should be considered together with other signals such as nesting depth, function size, and branch count, but it should remain available as an independent diagnostic.
 
+## Duplicate code detection
+
+The checker should detect substantial duplicated code that is highly likely to be a maintenance problem and an obvious candidate for extraction into a shared function/method/helper.
+
+This rule is not intended to flag every repeated line, common idiom, boilerplate, generated code pattern, or short guard clause.
+
+The target is duplication that most reviewers would reasonably consider "this should probably be shared".
+
+Candidate signals include:
+
+- large identical or near-identical AST subtrees
+- repeated statement sequences with only variable/literal substitutions
+- duplicated branching structure
+- duplicated validation / transformation / I/O sequences
+- the same multi-step operation repeated across multiple functions
+- duplicated blocks large enough that future fixes would need to be applied in several places
+- three or more similar copies of the same logic, even when each copy has minor differences
+
+Detection should prefer normalized syntax/AST comparison over raw text matching so that harmless renaming or formatting differences do not hide meaningful duplication.
+
+Possible normalization may ignore or abstract:
+
+- variable names
+- literal values where appropriate
+- whitespace / formatting
+- comments
+- trivial syntactic differences that preserve the same operation structure
+
+The checker should avoid aggressively flagging:
+
+- very short snippets
+- standard language boilerplate
+- trivial null/argument checks
+- generated code
+- test data that is intentionally duplicated
+- framework-required repetitive declarations
+- simple getters/setters or repetitive mappings unless the repeated logic is substantial
+
+Typical severity:
+
+- `注意`: substantial duplicated logic exists and is worth consolidating
+- `警告`: a large or widely repeated block is highly likely to cause inconsistent fixes or future bugs
+- `危険`: not used for duplication alone
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 似た処理が複数箇所に重複しています。共通関数へまとめられないか確認してください
+```
+
+```text
+ACI2xx 警告 大きな処理ブロックが複数箇所に重複しており、修正漏れによる不整合を生む可能性が高くなっています
+```
+
+Duplicate-code detection may be implemented with a similarity score, but the user-facing result should not imply that similarity percentage alone determines code quality. The score should only support detection of clearly duplicated behavior.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
