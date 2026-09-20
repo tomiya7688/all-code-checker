@@ -1758,6 +1758,58 @@ ACI2xx 警告 文字コードを明示せずにデコードしているため、
 
 This rule should focus on concrete conversion risk rather than treating legacy encodings themselves as invalid.
 
+## Narrowing type assignment and conversion
+
+The checker should detect assignments or conversions from a wider/richer type into a narrower type when information loss, overflow, truncation, precision loss, sign changes, or invalid value mapping may occur.
+
+Candidate patterns include:
+
+- larger integer type to smaller integer type
+- floating-point value to integer type
+- higher-precision floating-point type to lower-precision type
+- signed to unsigned conversion
+- unsigned to signed conversion
+- integer to enum when the value may not correspond to a defined member
+- wide character/code-point values to narrower character representations
+- decimal/high-precision numeric values to binary floating-point types
+- collection/count/index values narrowed to smaller numeric types
+- pointer/integer conversions where the destination cannot safely represent the source value
+- implicit narrowing conversions hidden inside assignments, returns, arguments, or serialization code
+
+Typical severity:
+
+- `危険`: static analysis can prove that the value is outside the destination type's valid range or that information loss is certain
+- `警告`: the source value may exceed the destination range or may lose precision/sign/information under realistic inputs
+- `注意`: an explicit narrowing conversion appears intentional, but the operation is still worth reviewing
+
+Examples:
+
+```text
+long value = 5000000000;
+int x = (int)value;
+```
+
+If the constant value is statically known to exceed the destination range, this may be `危険`.
+
+```text
+long value = ReadValue();
+int x = (int)value;
+```
+
+If the possible value range is unknown and no bounds check exists, this should normally be `警告`.
+
+The checker should consider:
+
+- source and destination type ranges
+- prior bounds/range checks
+- checked/unchecked arithmetic context
+- explicit casts
+- saturation/clamping logic
+- language-specific overflow behavior
+- serialization/protocol constraints that may already guarantee a safe range
+
+A narrowing conversion should not be reported when static analysis can prove the source value always fits safely in the destination type.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
