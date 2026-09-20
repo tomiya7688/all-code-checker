@@ -1958,6 +1958,61 @@ ACI2xx 警告 同じ役割と思われる実装が複数箇所で並行して利
 
 This rule should not prescribe merging classes/files. It should only surface strong evidence that multiple artifacts may represent the same semantic concept.
 
+## Dangerous circular references and dependency cycles
+
+The checker should detect circular references, dependency cycles, and recursive object relationships when they are likely to cause real runtime, initialization, lifetime, serialization, or maintainability problems.
+
+Circularity by itself is not always invalid. Some object graphs, bidirectional relationships, parent/child models, dependency graphs, and recursive data structures are intentional.
+
+The checker should therefore focus on harmful cycles.
+
+Candidate patterns include:
+
+- module/import cycles that prevent initialization from completing correctly
+- circular dependency injection graphs that cannot be constructed
+- mutually recursive initialization where each side requires the other to already be initialized
+- recursive property/object traversal without a termination condition
+- object graphs that cause infinite recursion during serialization
+- reference-counted ownership cycles that prevent objects/resources from being released
+- event/listener relationships that keep objects alive unintentionally
+- circular project/package dependencies that break build or restore
+- configuration/reference cycles that cannot be resolved
+- recursive type/value construction that produces unbounded nesting
+- cycles across services/managers where initialization order becomes impossible or unstable
+
+Typical severity:
+
+- `危険`: the cycle is statically proven to cause initialization failure, infinite recursion, unreleasable ownership, build failure, or another definite malfunction
+- `警告`: the cycle is highly likely to cause lifecycle, initialization, serialization, dependency-resolution, or maintenance problems
+- `注意`: an intentional-looking cycle exists but is complex enough to deserve review
+
+Examples:
+
+```text
+ACI1xx 危険 A と B が相互に初期化を要求しており、どちらも正常に構築できません
+```
+
+```text
+ACI2xx 警告 このオブジェクト参照は循環しており、シリアライズ時に再帰が終了しない可能性があります
+```
+
+```text
+ACI2xx 警告 参照カウント型の所有関係が循環しており、オブジェクトが解放されない可能性があります
+```
+
+The checker should use language/framework-specific knowledge where available.
+
+Examples may include:
+
+- C#: DI container cycles, event-handler retention, recursive serialization graphs
+- Python: import cycles, recursive object serialization, reference/lifecycle issues where detectable
+- Go: package import cycles, recursive initialization, retained references
+- TypeScript/JavaScript: module cycles, circular JSON serialization, listener/resource retention
+- C++: owning-pointer cycles, recursive construction, static initialization order issues
+- Rust: reference cycles through `Rc`/interior-mutability patterns or unsafe ownership constructs
+
+The checker should not flag every bidirectional relationship or recursive data structure. A cycle should only be reported when concrete failure/lifetime/initialization evidence exists or the risk is strong enough to justify review.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
