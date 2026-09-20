@@ -1373,6 +1373,55 @@ ACI2xx 注意 この処理は同種の処理と比べて多くの中間経路を
 
 This rule should avoid prescriptive refactoring advice and should not classify intentional architectural routing as a defect merely because it is longer.
 
+## Meaningless or no-effect code
+
+The checker should detect code that is reachable and syntactically valid but has no meaningful effect, or is highly likely to be an accidental no-op.
+
+This differs from unused code:
+
+- unused code exists but is never reached/referenced
+- meaningless code is executed or reachable, but does not meaningfully change state, produce a result, or affect control flow
+
+Candidate patterns include:
+
+- self-assignment such as `x = x`
+- calculations whose result is immediately discarded
+- conversions/casts that do not change the value or type meaningfully
+- expressions with no observable side effect
+- redundant assignments immediately overwritten before being read
+- setting a value to the value it already provably has
+- conditions or branches whose bodies have no effect
+- empty operations repeated inside loops
+- copying a value through temporary variables without transformation or use
+- calling a pure function and discarding its result
+- redundant state changes that cancel each other before any observation
+- statements that are semantically equivalent to doing nothing
+
+Typical severity:
+
+- `注意`: the code appears unnecessary or has no meaningful effect
+- `警告`: the no-op strongly suggests an implementation mistake or an intended operation that was accidentally omitted
+- `危険`: generally not used for meaningless code alone
+
+Possible warning examples include:
+
+- a pure validation/calculation function is called but its result is ignored where nearby code clearly expects that result
+- a variable is assigned and immediately overwritten on every reachable path
+- a branch exists for an important condition but its body performs no effective operation
+- a state update cancels itself before any code can observe the intermediate value
+
+Example diagnostics:
+
+```text
+ACI2xx 注意 この処理は実行結果に影響を与えていないようです
+```
+
+```text
+ACI2xx 警告 このコードは実質的に何も行っておらず、処理の実装漏れである可能性があります
+```
+
+The checker should account for language-specific side effects and must not classify an expression as meaningless merely because its return value is unused. Calls that may perform I/O, mutate state, log, synchronize, raise exceptions, or otherwise have observable behavior are not no-ops.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
