@@ -2452,6 +2452,85 @@ The checker should also consider language/framework-specific process APIs, for e
 
 This rule should integrate with secret-handling, error-handling, resource-lifetime, and deadlock/blocking analysis.
 
+## Application vulnerability detection
+
+The checker should detect source patterns that can directly create exploitable application vulnerabilities.
+
+This category is security-focused and may legitimately emit `危険`.
+
+Candidate rule families include:
+
+- SQL injection and unsafe query construction
+- command/shell injection
+- path traversal
+- unsafe file write/read paths
+- cross-site scripting (XSS)
+- unsafe HTML/template rendering
+- server-side request forgery (SSRF)
+- insecure deserialization
+- unsafe reflection/dynamic code execution
+- authentication bypass patterns
+- authorization checks that are missing on reachable sensitive operations
+- hard-coded credentials, API keys, tokens, or secrets
+- secrets written to logs, URLs, diagnostics, or plaintext storage
+- insecure cryptographic primitives or modes
+- predictable token/session/nonce generation
+- weak random generation in security-sensitive contexts
+- unsafe TLS/certificate validation disabling
+- use of plain HTTP where a security-sensitive endpoint clearly requires transport protection
+- insecure temporary-file handling
+- world-writable or overly permissive file/resource permissions
+- unsafe archive extraction and zip-slip-like path handling
+- untrusted input used in file paths, URLs, commands, queries, templates, or reflection without sufficient validation
+- integer/length handling that can create buffer or allocation problems in low-level languages
+- memory-safety issues in unsafe/native code
+- use-after-free, double free, invalid pointer access, and related memory corruption paths
+- open redirects where user-controlled destinations are accepted without validation
+- missing CSRF protection where framework/context evidence makes it clearly applicable
+- unsafe CORS configuration where origin restrictions are effectively disabled
+- insecure defaults that expose debug/admin interfaces in production-like paths
+- unsafe plugin/mod/script execution boundaries
+
+Typical severity:
+
+- `危険`: exploitability or direct security breakage is statically proven or effectively certain
+- `警告`: the pattern has a high probability of becoming exploitable under realistic input
+- `注意`: the implementation weakens a security boundary or is security-sensitive enough to deserve review, but exploitation is not demonstrated
+
+Examples:
+
+```text
+ACI1xx 危険 外部入力がSQL文へ直接連結されており、SQLインジェクションが可能です
+```
+
+```text
+ACI2xx 警告 ユーザー入力をファイルパスへ使用していますが、親ディレクトリ移動を制限していません
+```
+
+```text
+ACI2xx 注意 証明書検証を無効化する設定が使用されています。意図した用途か確認してください
+```
+
+The checker should prefer data-flow-aware evidence over simple API-name matching.
+
+For example, the presence of a SQL execution API alone is not suspicious. The analyzer should determine whether untrusted or external input reaches the query text without a safe parameterization boundary.
+
+Likewise, cryptographic or TLS APIs should not be reported merely because they are low-level. Diagnostics should depend on concrete unsafe configuration or misuse.
+
+This security rule family should integrate with:
+
+- unsafe external process execution
+- password/secret handling
+- randomness-quality checks
+- reference/lifetime safety
+- narrowing/overflow analysis
+- configuration validation
+- data-flow analysis
+- error-handling analysis
+- file/path analysis
+- serialization/deserialization analysis
+
+v1.0.0 should prioritize high-confidence, commonly exploitable vulnerability patterns. Broader security best-practice checks can be expanded after v1.0.0.
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
