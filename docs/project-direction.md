@@ -761,6 +761,79 @@ diagnostic generation
 
 This allows JSON, INI, and future configuration formats to share the same project-level analysis pipeline.
 
+## Markup and structured document validation
+
+The checker should validate XAML, XML, and HTML files.
+
+For v1.0.0, this support should focus on whether the document is structurally broken or very likely broken. More detailed framework-specific or semantic checks are intentionally deferred until after v1.0.0.
+
+### XAML
+
+Initial checks may include:
+
+- malformed XML/XAML syntax
+- unclosed or incorrectly nested elements
+- invalid attribute syntax
+- duplicate attributes where invalid
+- broken namespace declarations
+- references that are structurally impossible to resolve when this can be determined without deep framework analysis
+
+Severity:
+
+- `危険`: the XAML is structurally invalid or cannot be parsed correctly
+- `警告`: the XAML appears structurally suspicious or likely to fail at runtime, but certainty is insufficient for `危険`
+
+More detailed checks such as framework-specific binding analysis, resource resolution, style/template semantics, or advanced UI-framework validation are post-v1.0.0 scope.
+
+### XML
+
+Initial checks may include:
+
+- malformed XML syntax
+- mismatched or unclosed tags
+- invalid entity/reference syntax
+- duplicate attributes
+- invalid namespace structure
+- document structure that cannot be parsed as XML
+
+Severity:
+
+- `危険`: definite parse/structure failure
+- `警告`: suspicious but not conclusively invalid structure or references
+
+Schema-based XML validation such as XSD or deeper application-specific XML semantics may be added after v1.0.0.
+
+### HTML
+
+Initial checks may include:
+
+- clearly broken tag structure
+- impossible or malformed attribute syntax
+- severely mismatched nesting
+- invalid document fragments where the parser cannot recover reliably
+- broken embedded references when statically obvious
+
+HTML parsers are intentionally forgiving, so the checker should distinguish between:
+
+- structurally broken markup that is highly likely to cause incorrect behavior → `危険`
+- markup that browsers may recover from but is suspicious or fragile → `警告`
+
+More detailed HTML checks such as accessibility, semantic HTML quality, framework-specific template semantics, SEO, or style recommendations are post-v1.0.0 scope.
+
+### v1.0.0 scope boundary
+
+For XAML, XML, and HTML, v1.0.0 should prioritize:
+
+```text
+definitely broken
+→ 危険
+
+probably broken / structurally suspicious
+→ 警告
+```
+
+Fine-grained validation and framework-specific analysis should be deferred until after v1.0.0.
+
 ## Out of scope for the checker
 
 The project should not attempt to make subjective design decisions such as:
