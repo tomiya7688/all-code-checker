@@ -896,7 +896,14 @@ ai-context-reducer-assisted context reduction during implementation
 src/ based codebase
 ```
 
-These projects are references/supporting tools for implementation. They should not force all-code-checker to copy their internal architecture directly when the requirements of this project differ.
+These projects are used in two different ways:
+
+- `upd-commander-base-design` and `oop-design-checker` are not only references; their C# checkers are installed into CI as strict design gates for all-code-checker itself.
+- `ai-context-reducer` remains a development-support/context-routing tool and is not a runtime/build dependency.
+
+The external design checkers are pinned to explicit commits in CI for reproducibility. Updating those pins is an intentional maintenance action.
+
+Their internal architecture should still not be copied blindly when all-code-checker has different requirements.
 
 
 ### Adopted implementation principles
@@ -922,6 +929,31 @@ src/
 ```
 
 More projects, including the GUI and language-specific analyzer adapters, should be added only when their responsibility is concrete enough to justify a separate project.
+
+### External design checker gates
+
+all-code-checker CI must run both Tomiya design checkers against its own source:
+
+- UPD Commander Base Design checker
+  - strict mode
+  - warnings and attentions are treated as CI failures
+- OOP Design Checker
+  - strict `--fail-on attention`
+  - analyzes the C# source/project set under `src/`
+
+These checks are required CI jobs and participate in the final `required` gate.
+
+This means all-code-checker must satisfy:
+
+```text
+normal .NET build
++ .NET analyzer gate
++ UPD Commander design gate
++ OOP design gate
++ all-code-checker self-check
+```
+
+The design checker repositories are checked out only inside CI tooling paths and are not product runtime dependencies.
 
 ### Self-check and self-violation policy
 
