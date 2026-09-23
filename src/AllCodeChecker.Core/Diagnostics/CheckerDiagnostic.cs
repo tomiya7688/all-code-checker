@@ -6,4 +6,5 @@ public sealed record CheckerDiagnostic(
     string Reason,
     string? Path = null,
     int? Line = null,
-    int? Column = null);
+    int? Column = null,
+    string? Language = null);
