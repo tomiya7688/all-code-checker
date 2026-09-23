@@ -149,7 +149,7 @@ public sealed class AnalysisInputDiscovery
             foreach (string directory in Directory.EnumerateDirectories(current)
                          .OrderByDescending(path => path, StringComparer.Ordinal))
             {
-                if (!pathPolicy.IsExcludedDirectory(Path.GetFileName(directory)))
+                if (!pathPolicy.IsExcludedDirectory(root, directory))
                 {
                     pending.Push(directory);
                 }
@@ -158,7 +158,10 @@ public sealed class AnalysisInputDiscovery
             foreach (string file in Directory.EnumerateFiles(current)
                          .OrderBy(path => path, StringComparer.Ordinal))
             {
-                yield return file;
+                if (!pathPolicy.IsExcludedFile(root, file))
+                {
+                    yield return file;
+                }
             }
         }
     }
