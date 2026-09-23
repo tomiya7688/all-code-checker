@@ -19,7 +19,7 @@ public sealed class PathIgnoreMatcher
 
     public bool IsMatch(string relativePath)
     {
-        string normalizedPath = Normalize(relativePath).TrimStart('/');
+        string normalizedPath = Normalize(relativePath).Trim('/');
 
         return patterns.Any(pattern => pattern.IsMatch(normalizedPath));
     }
@@ -29,27 +29,40 @@ public sealed class PathIgnoreMatcher
 
     private static string ToRegexPattern(string pattern)
     {
-        string normalized = pattern.TrimStart('/');
+        string normalized = pattern.Trim('/');
+        bool matchAnyDepth = !normalized.Contains('/');
+
+        if (normalized.EndsWith("/**", StringComparison.Ordinal))
+        {
+            string directoryPattern = normalized[..^3];
+            return BuildPattern(directoryPattern, matchAnyDepth) + "(?:/.*)?$";
+        }
+
+        return BuildPattern(normalized, matchAnyDepth) + "$";
+    }
+
+    private static string BuildPattern(string pattern, bool matchAnyDepth)
+    {
         var builder = new StringBuilder("^");
 
-        if (!normalized.Contains('/'))
+        if (matchAnyDepth)
         {
             builder.Append("(?:.*/)?");
         }
 
-        for (int index = 0; index < normalized.Length; index++)
+        for (int index = 0; index < pattern.Length; index++)
         {
-            char current = normalized[index];
+            char current = pattern[index];
 
             if (current == '*')
             {
-                bool doubleStar = index + 1 < normalized.Length && normalized[index + 1] == '*';
+                bool doubleStar = index + 1 < pattern.Length && pattern[index + 1] == '*';
 
                 if (doubleStar)
                 {
                     index++;
 
-                    bool followedBySlash = index + 1 < normalized.Length && normalized[index + 1] == '/';
+                    bool followedBySlash = index + 1 < pattern.Length && pattern[index + 1] == '/';
 
                     if (followedBySlash)
                     {
@@ -77,12 +90,6 @@ public sealed class PathIgnoreMatcher
             builder.Append(Regex.Escape(current.ToString()));
         }
 
-        if (normalized.EndsWith("/**", StringComparison.Ordinal))
-        {
-            builder.Append("?");
-        }
-
-        builder.Append("$");
         return builder.ToString();
     }
 }
