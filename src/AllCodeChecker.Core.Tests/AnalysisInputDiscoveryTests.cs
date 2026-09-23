@@ -76,7 +76,7 @@ public sealed class AnalysisInputDiscoveryTests
 
         DiscoveredSourceGroup group = Assert.Single(result.Groups);
         Assert.Equal(SupportedLanguage.Go, group.Language);
-        Assert.Equal([source], group.SourceFiles);
+        Assert.Equal(new[] { source }, group.SourceFiles);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class AnalysisInputDiscoveryTests
 
         public string CreateFile(string relativePath, string content)
         {
-            string path = Path.Combine(Root, relativePath);
+            string path = Path.GetFullPath(Path.Combine(Root, relativePath));
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, content);
             return path;
