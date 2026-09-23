@@ -2,7 +2,7 @@ namespace AllCodeChecker.Discovery;
 
 public sealed class DiscoveryPathPolicy
 {
-    private static readonly HashSet<string> ExcludedDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
+    private readonly HashSet<string> excludedDirectoryNames = new(StringComparer.OrdinalIgnoreCase)
     {
         ".git",
         ".idea",
@@ -17,5 +17,5 @@ public sealed class DiscoveryPathPolicy
     };
 
     public bool IsExcludedDirectory(string directoryName) =>
-        ExcludedDirectoryNames.Contains(directoryName);
+        excludedDirectoryNames.Contains(directoryName);
 }
