@@ -150,7 +150,7 @@ public sealed class ConfigurationFoundationTests
         AnalysisDiscoveryResult result = discovery.Discover(fixture.Root);
 
         DiscoveredSourceGroup group = Assert.Single(result.Groups);
-        Assert.Equal([included], group.SourceFiles);
+        Assert.Equal(new[] { included }, group.SourceFiles);
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public sealed class ConfigurationFoundationTests
         AnalysisDiscoveryResult result = discovery.Discover(fixture.Root);
 
         DiscoveredSourceGroup group = Assert.Single(result.Groups);
-        Assert.Equal([included], group.SourceFiles);
+        Assert.Equal(new[] { included }, group.SourceFiles);
     }
 
     private sealed class ConfigurationFixture : IDisposable
@@ -181,7 +181,7 @@ public sealed class ConfigurationFoundationTests
 
         public string CreateFile(string relativePath, string content)
         {
-            string path = Path.Combine(Root, relativePath);
+            string path = Path.GetFullPath(Path.Combine(Root, relativePath));
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, content);
             return path;
