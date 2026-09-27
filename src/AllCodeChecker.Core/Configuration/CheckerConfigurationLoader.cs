@@ -42,7 +42,7 @@ public sealed class CheckerConfigurationLoader
             : new ConfigurationLoadResult(LoadFile(discoveredPath), discoveredPath);
     }
 
-    public string? FindNearestConfiguration(string targetPath)
+    public static string? FindNearestConfiguration(string targetPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(targetPath);
 
