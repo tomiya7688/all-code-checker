@@ -14,8 +14,7 @@ public sealed class ConfigurationFoundationTests
         using var fixture = new ConfigurationFixture();
         string target = fixture.CreateFile("src/main.cs", "class MainType {}");
 
-        var loader = new CheckerConfigurationLoader();
-        ConfigurationLoadResult result = loader.Load(target);
+        ConfigurationLoadResult result = CheckerConfigurationLoader.Load(target);
 
         Assert.True(result.IsDefault);
         Assert.True(result.Configuration.Severities.Danger);
@@ -37,8 +36,7 @@ public sealed class ConfigurationFoundationTests
             """{"severity":{"notice":false}}""");
         string target = fixture.CreateFile("apps/tool/src/main.cs", "class MainType {}");
 
-        var loader = new CheckerConfigurationLoader();
-        ConfigurationLoadResult result = loader.Load(target);
+        ConfigurationLoadResult result = CheckerConfigurationLoader.Load(target);
 
         Assert.Equal(nestedConfiguration, result.ConfigurationPath);
         Assert.True(result.Configuration.Severities.Danger);
@@ -54,9 +52,7 @@ public sealed class ConfigurationFoundationTests
         string target = fixture.CreateFile("src/main.cs", "class MainType {}");
         string missing = Path.Combine(fixture.Root, "missing.json");
 
-        var loader = new CheckerConfigurationLoader();
-
-        Assert.Throws<ConfigurationException>(() => loader.Load(target, missing));
+        Assert.Throws<ConfigurationException>(() => CheckerConfigurationLoader.Load(target, missing));
     }
 
     [Fact]
@@ -66,9 +62,7 @@ public sealed class ConfigurationFoundationTests
         fixture.CreateFile("all-code-checker.json", """{"severity":{"danger":"yes"}}""");
         string target = fixture.CreateFile("src/main.cs", "class MainType {}");
 
-        var loader = new CheckerConfigurationLoader();
-
-        Assert.Throws<ConfigurationException>(() => loader.Load(target));
+        Assert.Throws<ConfigurationException>(() => CheckerConfigurationLoader.Load(target));
     }
 
     [Fact]
@@ -78,9 +72,7 @@ public sealed class ConfigurationFoundationTests
         fixture.CreateFile("all-code-checker.json", """{"severty":{"danger":false}}""");
         string target = fixture.CreateFile("src/main.cs", "class MainType {}");
 
-        var loader = new CheckerConfigurationLoader();
-
-        Assert.Throws<ConfigurationException>(() => loader.Load(target));
+        Assert.Throws<ConfigurationException>(() => CheckerConfigurationLoader.Load(target));
     }
 
     [Fact]
@@ -104,8 +96,7 @@ public sealed class ConfigurationFoundationTests
             """);
         string target = fixture.CreateFile("src/main.cs", "class MainType {}");
 
-        var loader = new CheckerConfigurationLoader();
-        CheckerConfiguration configuration = loader.Load(target).Configuration;
+        CheckerConfiguration configuration = CheckerConfigurationLoader.Load(target).Configuration;
 
         RuleConfiguration rule = configuration.Rules["ACI201"];
         Assert.False(rule.Enabled);
@@ -143,8 +134,7 @@ public sealed class ConfigurationFoundationTests
         fixture.CreateFile("examples/sample.cs", "class Sample {}");
         fixture.CreateFile("src/model.generated.cs", "class Generated {}");
 
-        var loader = new CheckerConfigurationLoader();
-        CheckerConfiguration configuration = loader.Load(fixture.Root).Configuration;
+        CheckerConfiguration configuration = CheckerConfigurationLoader.Load(fixture.Root).Configuration;
         var discovery = new AnalysisInputDiscovery(new DiscoveryPathPolicy(configuration.IgnorePaths));
 
         AnalysisDiscoveryResult result = discovery.Discover(fixture.Root);
