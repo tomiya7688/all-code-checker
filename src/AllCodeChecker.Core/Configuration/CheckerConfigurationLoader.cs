@@ -5,7 +5,7 @@ using AllCodeChecker.Rules;
 
 namespace AllCodeChecker.Configuration;
 
-public sealed class CheckerConfigurationLoader
+public static class CheckerConfigurationLoader
 {
     public const string DefaultFileName = "all-code-checker.json";
 
