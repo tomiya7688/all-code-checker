@@ -103,7 +103,7 @@ public sealed class CliContractTests
             CliDiagnosticOrdering.Stable(diagnostics);
 
         Assert.Equal(
-            ["ACI002", "ACI003", "ACI201"],
+            new[] { "ACI002", "ACI003", "ACI201" },
             ordered.Select(diagnostic => diagnostic.RuleId));
     }
 
