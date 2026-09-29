@@ -8,4 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="../AllCodeChecker.Core/AllCodeChecker.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AllCodeChecker.Cli.Tests" />
+  </ItemGroup>
 </Project>
