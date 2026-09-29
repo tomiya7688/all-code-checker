@@ -17,7 +17,7 @@ public sealed class CheckerConfigurationLoader
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
     };
 
-    public ConfigurationLoadResult Load(string targetPath, string? explicitConfigurationPath = null)
+    public static ConfigurationLoadResult Load(string targetPath, string? explicitConfigurationPath = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(targetPath);
 
