@@ -5,7 +5,7 @@ namespace AllCodeChecker.Analysis;
 
 public sealed class AnalyzerOrchestrator
 {
-    private readonly IReadOnlyDictionary<SupportedLanguage, ILanguageAnalyzer> analyzers;
+    private readonly Dictionary<SupportedLanguage, ILanguageAnalyzer> analyzers;
 
     public AnalyzerOrchestrator(IEnumerable<ILanguageAnalyzer> analyzers)
     {
