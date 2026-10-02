@@ -104,7 +104,7 @@ internal static class CliOutputRenderer
         };
 
         string json = JsonSerializer.Serialize(document, JsonOptions);
-        return json.Replace(""schema":", ""$schema":", StringComparison.Ordinal);
+        return json.Replace("\"schema\":", "\"$schema\":", StringComparison.Ordinal);
     }
 
     private static object CreateSarifResult(CheckerDiagnostic diagnostic)
