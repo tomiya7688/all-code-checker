@@ -6,6 +6,9 @@ namespace AllCodeChecker.Cli.Tests;
 
 public sealed class CliContractTests
 {
+    private static readonly string[] ExpectedDiagnosticOrder =
+        ["ACI002", "ACI003", "ACI201"];
+
     [Fact]
     public void ParserUsesDocumentedDefaults()
     {
@@ -103,7 +106,7 @@ public sealed class CliContractTests
             CliDiagnosticOrdering.Stable(diagnostics);
 
         Assert.Equal(
-            new[] { "ACI002", "ACI003", "ACI201" },
+            ExpectedDiagnosticOrder,
             ordered.Select(diagnostic => diagnostic.RuleId));
     }
 
