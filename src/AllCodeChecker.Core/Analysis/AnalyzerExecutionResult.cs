@@ -59,7 +59,7 @@ public sealed record AnalyzerExecutionResult
             reason);
     }
 
-    private static IReadOnlyList<CheckerDiagnostic> MaterializeDiagnostics(
+    private static CheckerDiagnostic[] MaterializeDiagnostics(
         IEnumerable<CheckerDiagnostic>? diagnostics) =>
         diagnostics?.ToArray() ?? [];
 }
