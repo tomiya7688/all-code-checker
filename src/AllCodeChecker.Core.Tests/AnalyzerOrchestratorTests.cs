@@ -238,9 +238,10 @@ public sealed class AnalyzerOrchestratorTests
             discovery,
             AnalyzerExecutionMode.Sequential);
 
-        Assert.Equal(
-            new[] { "/repo/one", "/repo/two" },
-            invocationOrder);
+        Assert.Collection(
+            invocationOrder,
+            path => Assert.Equal("/repo/one", path),
+            path => Assert.Equal("/repo/two", path));
     }
 
     [Fact]
