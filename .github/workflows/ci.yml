@@ -30,6 +30,9 @@ jobs:
       - name: Test core
         run: dotnet test src/AllCodeChecker.Core.Tests/AllCodeChecker.Core.Tests.csproj -c Release
 
+      - name: Test CLI
+        run: dotnet test src/AllCodeChecker.Cli.Tests/AllCodeChecker.Cli.Tests.csproj -c Release
+
       - name: CLI smoke test
         run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- .
 
@@ -58,7 +61,10 @@ jobs:
           -p:TreatWarningsAsErrors=true
 
       - name: Bootstrap self-check entry point
-        run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- src
+        run: >
+          dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+          -c Release --no-build --
+          src --fail-on notice
 
   design-checkers:
     name: design-checkers
@@ -90,6 +96,7 @@ jobs:
         run: |
           dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
           dotnet restore src/AllCodeChecker.Core.Tests/AllCodeChecker.Core.Tests.csproj
+          dotnet restore src/AllCodeChecker.Cli.Tests/AllCodeChecker.Cli.Tests.csproj
 
       - name: UPD Commander design check
         working-directory: .ci-tools/upd-commander-base-design/support_tools/cs/upd_commander_checker
