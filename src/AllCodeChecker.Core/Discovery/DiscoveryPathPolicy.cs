@@ -16,6 +16,21 @@ public sealed class DiscoveryPathPolicy
         "vendor"
     };
 
-    public bool IsExcludedDirectory(string directoryName) =>
-        excludedDirectoryNames.Contains(directoryName);
+    private readonly PathIgnoreMatcher ignoreMatcher;
+
+    public DiscoveryPathPolicy(IEnumerable<string>? ignoredPaths = null)
+    {
+        ignoreMatcher = new PathIgnoreMatcher(ignoredPaths);
+    }
+
+    public bool IsExcludedDirectory(string root, string directoryPath)
+    {
+        string directoryName = Path.GetFileName(directoryPath);
+
+        return excludedDirectoryNames.Contains(directoryName)
+            || ignoreMatcher.IsMatch(Path.GetRelativePath(root, directoryPath));
+    }
+
+    public bool IsExcludedFile(string root, string filePath) =>
+        ignoreMatcher.IsMatch(Path.GetRelativePath(root, filePath));
 }
