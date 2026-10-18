@@ -47,8 +47,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+      - name: Restore self-check targets
+        run: |
+          dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
+          dotnet restore src/AllCodeChecker.Core.Tests/AllCodeChecker.Core.Tests.csproj
+          dotnet restore src/AllCodeChecker.Cli.Tests/AllCodeChecker.Cli.Tests.csproj
 
       - name: Build with strict .NET analyzers
         run: >

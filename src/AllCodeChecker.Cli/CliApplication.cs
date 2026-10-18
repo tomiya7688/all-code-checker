@@ -1,4 +1,5 @@
 using System.Reflection;
+using AllCodeChecker.Analysis;
 using AllCodeChecker.Configuration;
 using AllCodeChecker.Diagnostics;
 using AllCodeChecker.Discovery;
@@ -62,7 +63,11 @@ internal static class CliApplication
                     "対応しているsource fileが解析対象内に見つかりません。");
             }
 
-            IReadOnlyList<CheckerDiagnostic> analyzerDiagnostics = [];
+            AnalysisOrchestrationResult analysis = new AnalyzerOrchestrator([new CSharpProjectAnalyzer()])
+                .AnalyzeAsync(discoveryResult)
+                .GetAwaiter()
+                .GetResult();
+            IReadOnlyList<CheckerDiagnostic> analyzerDiagnostics = analysis.Diagnostics;
             IReadOnlyList<CheckerDiagnostic> filteredDiagnostics =
                 DiagnosticFilter.Apply(analyzerDiagnostics, enabledSeverities);
             IReadOnlyList<CheckerDiagnostic> orderedDiagnostics =
