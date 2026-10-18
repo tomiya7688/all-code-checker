@@ -204,7 +204,7 @@ public sealed class CliContractTests
     }
 
     [Fact]
-    public void ApplicationSmokeTestAcceptsSupportedDirectory()
+    public void ApplicationSmokeTestReportsPartialCSharpAnalysisWithoutProject()
     {
         using var fixture = new CliFixture();
         fixture.CreateFile("src/main.cs", "internal sealed class MainType {}");
@@ -216,8 +216,9 @@ public sealed class CliContractTests
             output,
             error);
 
-        Assert.Equal((int)CliExitCode.Success, exitCode);
-        Assert.Contains("全体結果: 正常", output.ToString(), StringComparison.Ordinal);
+        Assert.Equal((int)CliExitCode.DiagnosticsFound, exitCode);
+        Assert.Contains("ACI903", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains("全体結果: 危険", output.ToString(), StringComparison.Ordinal);
         Assert.Equal(string.Empty, error.ToString());
     }
 
@@ -241,7 +242,7 @@ public sealed class CliContractTests
             output,
             error);
 
-        Assert.Equal((int)CliExitCode.Success, exitCode);
+        Assert.Equal((int)CliExitCode.DiagnosticsFound, exitCode);
         Assert.True(File.Exists(resultPath));
         Assert.Equal(string.Empty, output.ToString());
         Assert.Equal(string.Empty, error.ToString());
