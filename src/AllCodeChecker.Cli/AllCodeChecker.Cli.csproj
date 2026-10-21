@@ -15,11 +15,11 @@
 
   <Target Name="BundleTypeScriptRuntime" AfterTargets="Build"
           Condition="'$(SkipTypeScriptPackaging)' != 'true'">
-    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(TargetDir)&quot;" />
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(TargetPath)&quot;" />
   </Target>
 
   <Target Name="BundlePublishedTypeScriptRuntime" AfterTargets="Publish"
           Condition="'$(SkipTypeScriptPackaging)' != 'true'">
-    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(PublishDir)&quot;" />
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(PublishDir)$(TargetFileName)&quot;" />
   </Target>
 </Project>
