@@ -12,4 +12,14 @@
   <ItemGroup>
     <InternalsVisibleTo Include="AllCodeChecker.Cli.Tests" />
   </ItemGroup>
+
+  <Target Name="BundleTypeScriptRuntime" AfterTargets="Build"
+          Condition="'$(SkipTypeScriptPackaging)' != 'true'">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(TargetDir)&quot;" />
+  </Target>
+
+  <Target Name="BundlePublishedTypeScriptRuntime" AfterTargets="Publish"
+          Condition="'$(SkipTypeScriptPackaging)' != 'true'">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(PublishDir)&quot;" />
+  </Target>
 </Project>

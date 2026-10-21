@@ -14,7 +14,7 @@
 ## Source of Truth
 
 - 方針・ルール仕様: `docs/project-direction.md`
-- 言語別 Analyzer の入力・解析境界: `docs/csharp-analyzer.md` / `docs/python-analyzer.md`
+- 言語別 Analyzer の入力・解析境界: `docs/csharp-analyzer.md` / `docs/python-analyzer.md` / `docs/typescript-analyzer.md`
 - 実装: `src/`
 - CI: `.github/workflows/ci.yml`
 - Current task: GitHub Issue / PR とユーザー決定
