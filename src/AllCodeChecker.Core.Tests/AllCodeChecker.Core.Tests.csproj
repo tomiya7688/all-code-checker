@@ -15,4 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="../AllCodeChecker.Core/AllCodeChecker.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="BundleTypeScriptRuntimeForTests" AfterTargets="Build"
+          Condition="'$(SkipTypeScriptPackaging)' != 'true'">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(TargetPath)&quot;" />
+  </Target>
 </Project>
