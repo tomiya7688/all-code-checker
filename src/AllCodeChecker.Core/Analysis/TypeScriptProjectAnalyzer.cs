@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using AllCodeChecker.Diagnostics;
 using AllCodeChecker.Discovery;
@@ -35,6 +36,9 @@ public sealed class TypeScriptProjectAnalyzer : ILanguageAnalyzer
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardInputEncoding = Encoding.UTF8,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
             CreateNoWindow = true,
             WorkingDirectory = runtimeDirectory
         };
@@ -84,7 +88,7 @@ public sealed class TypeScriptProjectAnalyzer : ILanguageAnalyzer
                     item.RuleId,
                     Enum.Parse<DiagnosticSeverity>(item.Severity),
                     item.Reason,
-                    item.Path,
+                    item.Path is null ? null : Path.GetFullPath(item.Path),
                     item.Line,
                     item.Column,
                     "typescript")).ToArray();
@@ -92,7 +96,7 @@ public sealed class TypeScriptProjectAnalyzer : ILanguageAnalyzer
                     response.ProjectPath,
                     response.StrictNullChecks,
                     response.Symbols.Select(item => new TypeScriptSymbolSummary(
-                        item.FilePath, item.Name, item.Type, item.Line,
+                        Path.GetFullPath(item.FilePath), item.Name, item.Type, item.Line,
                         item.IsAny, item.IsUnknown, item.IncludesNull,
                         item.IncludesUndefined, item.Properties)).ToArray(),
                     response.TestScripts);

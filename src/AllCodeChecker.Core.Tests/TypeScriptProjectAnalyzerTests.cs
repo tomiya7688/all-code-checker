@@ -41,6 +41,7 @@ public sealed class TypeScriptProjectAnalyzerTests
         Assert.Contains("test", data.TestScripts);
         Assert.Contains("spec", data.TestScripts);
         Assert.DoesNotContain("lint", data.TestScripts);
+        Assert.All(data.Symbols, symbol => Assert.Equal(source, symbol.FilePath));
         Assert.Contains(data.Symbols, symbol => symbol.Name == "payload" && symbol.IsAny);
         Assert.Contains(data.Symbols, symbol => symbol.Name == "unknownValue" && symbol.IsUnknown);
         Assert.Contains(data.Symbols, symbol => symbol.Name == "maybe" && symbol.IncludesNull);
@@ -74,5 +75,7 @@ public sealed class TypeScriptProjectAnalyzerTests
         Assert.Equal(AnalyzerCompletionStatus.Partial, nested.Status);
         Assert.Contains(nested.Diagnostics, diagnostic => diagnostic.RuleId == "ACI002"
             && diagnostic.Path == broken);
+        Assert.Contains(nested.Diagnostics, diagnostic => diagnostic.RuleId == "ACI903"
+            && diagnostic.Reason.Contains("TypeScript projectの一部", StringComparison.Ordinal));
     }
 }
