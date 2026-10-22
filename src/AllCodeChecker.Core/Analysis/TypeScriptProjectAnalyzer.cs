@@ -9,6 +9,7 @@ namespace AllCodeChecker.Analysis;
 public sealed class TypeScriptProjectAnalyzer : ILanguageAnalyzer
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly Encoding Utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
     public SupportedLanguage Language => SupportedLanguage.TypeScript;
 
@@ -36,9 +37,9 @@ public sealed class TypeScriptProjectAnalyzer : ILanguageAnalyzer
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            StandardInputEncoding = Encoding.UTF8,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
+            StandardInputEncoding = Utf8NoBom,
+            StandardOutputEncoding = Utf8NoBom,
+            StandardErrorEncoding = Utf8NoBom,
             CreateNoWindow = true,
             WorkingDirectory = runtimeDirectory
         };

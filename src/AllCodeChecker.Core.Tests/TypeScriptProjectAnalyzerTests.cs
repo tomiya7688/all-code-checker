@@ -29,7 +29,8 @@ public sealed class TypeScriptProjectAnalyzerTests
             project, new TypeScriptProjectAnalyzer());
 
         AnalyzerScopeResult scope = Assert.Single(result.Scopes);
-        Assert.Equal(AnalyzerCompletionStatus.Complete, scope.Status);
+        Assert.True(scope.Status == AnalyzerCompletionStatus.Complete,
+            string.Join(Environment.NewLine, scope.Diagnostics.Select(item => item.Reason)));
         Assert.Contains(scope.Diagnostics, diagnostic => diagnostic.RuleId == "ACI001"
             && diagnostic.Path == source
             && diagnostic.Reason.Contains("TS2322", StringComparison.Ordinal));
@@ -70,7 +71,8 @@ public sealed class TypeScriptProjectAnalyzerTests
             scope => scope.BoundaryPath == fixture.Root);
         AnalyzerScopeResult nested = Assert.Single(result.Scopes,
             scope => scope.BoundaryPath == Path.GetDirectoryName(broken));
-        Assert.Equal(AnalyzerCompletionStatus.Complete, root.Status);
+        Assert.True(root.Status == AnalyzerCompletionStatus.Complete,
+            string.Join(Environment.NewLine, root.Diagnostics.Select(item => item.Reason)));
         Assert.DoesNotContain(root.Diagnostics, diagnostic => diagnostic.Path == broken);
         Assert.Equal(AnalyzerCompletionStatus.Partial, nested.Status);
         Assert.Contains(nested.Diagnostics, diagnostic => diagnostic.RuleId == "ACI002"
