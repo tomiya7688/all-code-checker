@@ -44,6 +44,10 @@ jobs:
       - name: CLI smoke test
         run: dotnet run --project src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj -c Release --no-build -- .
 
+      - name: Published TypeScript CLI smoke test
+        shell: pwsh
+        run: ./src/AllCodeChecker.TypeScript/verify-published.ps1
+
   self-quality-gate:
     name: self-quality-gate
     runs-on: ubuntu-latest
