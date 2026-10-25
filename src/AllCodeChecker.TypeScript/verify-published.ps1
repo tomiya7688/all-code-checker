@@ -65,5 +65,21 @@ if (@($result.diagnostics | Where-Object { $_.rule -eq 'ACI902' -or $_.rule -eq 
     throw "Published helper failed. Output: $output"
 }
 
-Write-Output "Published TypeScript CLI smoke passed on $rid without host PATH."
+$pythonSource = Join-Path $fixture 'valid.py'
+'value = 1' | Set-Content -LiteralPath $pythonSource -Encoding utf8NoBOM
+$savedPath = $env:PATH
+try {
+    $env:PATH = ''
+    $pythonOutput = & $app $pythonSource --format json --fail-on danger
+    $pythonExitCode = $LASTEXITCODE
+} finally {
+    $env:PATH = $savedPath
+}
+if ($pythonExitCode -ne 0) { throw "Published Python analyzer failed with exit $pythonExitCode. Output: $pythonOutput" }
+$pythonResult = ($pythonOutput -join [Environment]::NewLine) | ConvertFrom-Json
+if (@($pythonResult.diagnostics | Where-Object { $_.rule -eq 'ACI902' -or $_.rule -eq 'ACI903' }).Count -gt 0) {
+    throw "Published Python analyzer failed. Output: $pythonOutput"
+}
+
+Write-Output "Published TypeScript and Python CLI smoke passed on $rid without host PATH."
 exit 0
