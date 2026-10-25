@@ -25,7 +25,8 @@ foreach ($relativePath in $Paths) {
     if (-not $path.StartsWith($rootPrefix, $comparison)) {
         throw "Formatting target must stay inside the repository: $relativePath"
     }
-    $segments = $path.Substring($rootPrefix.Length).Split([System.IO.Path]::DirectorySeparatorChar)
+    $separators = @([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    $segments = $path.Substring($rootPrefix.Length).Split($separators, [System.StringSplitOptions]::RemoveEmptyEntries)
     if ($segments[0] -in @('.git', '.formatter-cache') -or
         [System.IO.Path]::GetExtension($path) -notin @('.ps1', '.psm1', '.psd1')) {
         throw "Formatting target must be a source PowerShell file: $relativePath"
@@ -50,7 +51,16 @@ foreach ($relativePath in $Paths) {
     if ($source -cne $formatted) {
         $changed += $relativePath
         if (-not $Check) {
-            [System.IO.File]::WriteAllText($path, $formatted, [System.Text.UTF8Encoding]::new($hasUtf8Bom))
+            $temporaryPath = Join-Path (Split-Path -Parent $path) ('.format-' + [guid]::NewGuid().ToString('N') + '.tmp')
+            try {
+                [System.IO.File]::WriteAllText($temporaryPath, $formatted, [System.Text.UTF8Encoding]::new($hasUtf8Bom))
+                [System.IO.File]::Move($temporaryPath, $path, $true)
+            }
+            finally {
+                if (Test-Path -LiteralPath $temporaryPath) {
+                    Remove-Item -LiteralPath $temporaryPath -Force
+                }
+            }
         }
     }
 }
