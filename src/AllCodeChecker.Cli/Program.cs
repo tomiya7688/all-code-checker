@@ -1,6 +1,3 @@
-using System.Reflection;
-using System.Runtime.InteropServices;
-
 namespace AllCodeChecker.Cli;
 
 internal static class Program
@@ -13,21 +10,16 @@ internal static class Program
 
     private static void ConfigurePublishedFastParseNativeLibrary()
     {
-        if (!OperatingSystem.IsWindows())
+        if (!OperatingSystem.IsWindows() ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FASTPARSE_LIBRARY_PATH")))
         {
             return;
         }
 
         var nativePath = Path.Combine(AppContext.BaseDirectory, "runtimes", "win-x64", "native", "fastparse.dll");
-        if (!File.Exists(nativePath))
+        if (File.Exists(nativePath))
         {
-            return;
+            Environment.SetEnvironmentVariable("FASTPARSE_LIBRARY_PATH", nativePath);
         }
-
-        var fastParseAssembly = Assembly.Load("FastParse");
-        NativeLibrary.SetDllImportResolver(fastParseAssembly, (libraryName, _, _) =>
-            string.Equals(Path.GetFileNameWithoutExtension(libraryName), "fastparse", StringComparison.OrdinalIgnoreCase)
-                ? NativeLibrary.Load(nativePath)
-                : IntPtr.Zero);
     }
 }
