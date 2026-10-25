@@ -13,6 +13,17 @@
     <InternalsVisibleTo Include="AllCodeChecker.Cli.Tests" />
   </ItemGroup>
 
+  <Target Name="KeepFastParseNativeAssetSeparate" AfterTargets="ComputeResolvedFilesToPublishList"
+          Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <!-- NuGet supplies FastParse.dll and native fastparse.dll; Windows publish paths are case insensitive. -->
+    <ItemGroup>
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+          Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Replace('\\', '/').Contains('/runtimes/win-x64/native/fastparse.dll'))">
+        <RelativePath>runtimes/win-x64/native/fastparse.dll</RelativePath>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
   <Target Name="BundleTypeScriptRuntime" AfterTargets="Build"
           Condition="'$(SkipTypeScriptPackaging)' != 'true'">
     <Exec Command="node &quot;$(MSBuildProjectDirectory)/../AllCodeChecker.TypeScript/package-runtime.mjs&quot; &quot;$(TargetPath)&quot;" />
