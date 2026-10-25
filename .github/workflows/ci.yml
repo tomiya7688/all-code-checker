@@ -25,6 +25,10 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Check PowerShell formatting
+        shell: pwsh
+        run: ./tools/format-powershell.ps1 -Check
+
       - name: Install TypeScript Compiler API
         working-directory: src/AllCodeChecker.TypeScript
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund

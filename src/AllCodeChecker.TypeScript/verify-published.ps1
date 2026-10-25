@@ -30,7 +30,8 @@ try {
         '-c', 'Release', '-r', $rid, '--self-contained', 'true', '-o', $publish)
     & dotnet @publishArgs
     if ($LASTEXITCODE -ne 0) { throw "Publish failed for $rid." }
-} finally {
+}
+finally {
     Pop-Location
 }
 
@@ -50,16 +51,17 @@ try {
     $env:PATH = ''
     $output = & $app $fixture --format json --fail-on danger
     $exitCode = $LASTEXITCODE
-} finally {
+}
+finally {
     $env:PATH = $savedPath
 }
 
 if ($exitCode -ne 1) { throw "Expected diagnostic exit code 1; actual: $exitCode. Output: $output" }
 $result = ($output -join [Environment]::NewLine) | ConvertFrom-Json
 $matching = @($result.diagnostics | Where-Object {
-    $_.rule -eq 'ACI001' -and $_.language -eq 'typescript' -and
-    $_.reason -match 'TS2322' -and $_.path -eq $source
-})
+        $_.rule -eq 'ACI001' -and $_.language -eq 'typescript' -and
+        $_.reason -match 'TS2322' -and $_.path -eq $source
+    })
 if ($matching.Count -ne 1) { throw "Expected one TypeScript semantic diagnostic. Output: $output" }
 if (@($result.diagnostics | Where-Object { $_.rule -eq 'ACI902' -or $_.rule -eq 'ACI903' }).Count -gt 0) {
     throw "Published helper failed. Output: $output"
@@ -72,7 +74,8 @@ try {
     $env:PATH = ''
     $pythonOutput = & $app $pythonSource --format json --fail-on danger
     $pythonExitCode = $LASTEXITCODE
-} finally {
+}
+finally {
     $env:PATH = $savedPath
 }
 if ($pythonExitCode -ne 0) { throw "Published Python analyzer failed with exit $pythonExitCode. Output: $pythonOutput" }
