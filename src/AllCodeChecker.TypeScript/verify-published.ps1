@@ -66,3 +66,4 @@ if (@($result.diagnostics | Where-Object { $_.rule -eq 'ACI902' -or $_.rule -eq 
 }
 
 Write-Output "Published TypeScript CLI smoke passed on $rid without host PATH."
+exit 0
