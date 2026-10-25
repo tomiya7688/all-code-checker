@@ -18,7 +18,7 @@
     <!-- NuGet supplies FastParse.dll and native fastparse.dll; Windows publish paths are case insensitive. -->
     <ItemGroup>
       <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
-          Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Replace('\\', '/').Contains('/runtimes/win-x64/native/fastparse.dll'))">
+          Condition="$([System.String]::Copy('%(ResolvedFileToPublish.Identity)').Contains('runtimes')) and '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'fastparse.dll'">
         <RelativePath>runtimes/win-x64/native/fastparse.dll</RelativePath>
       </ResolvedFileToPublish>
     </ItemGroup>
