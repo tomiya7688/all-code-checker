@@ -33,11 +33,13 @@ jobs:
         working-directory: src/AllCodeChecker.TypeScript
         run: npm install --no-package-lock --ignore-scripts --no-audit --no-fund
 
-      - name: Check TypeScript helper formatting and strict-null behavior
+      - name: Check TypeScript helper formatting
         working-directory: src/AllCodeChecker.TypeScript
-        run: |
-          npm run format:check
-          npm test
+        run: npm run format:check
+
+      - name: Test TypeScript strict-null behavior
+        working-directory: src/AllCodeChecker.TypeScript
+        run: npm test
 
       - name: Restore
         run: dotnet restore src/AllCodeChecker.Cli/AllCodeChecker.Cli.csproj
