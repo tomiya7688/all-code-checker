@@ -11,4 +11,4 @@ PSScriptAnalyzer 1.25.0 を初回実行時に PowerShell Gallery から `.format
 
 C# には .NET SDK 付属の `dotnet format` が使用できます。プロジェクト共通の C# 整形コマンドと、以下に列挙した対象以外の YAML・Markdown の整形は別の増分で整備します。
 
-TypeScript helper では `src/AllCodeChecker.TypeScript` で依存関係をインストール後、`npm run format` で helper・検証スクリプト・package.json・CI とこの手順書を整形し、`npm run format:check` で確認します。Prettier は 3.6.2 に固定し、既存の改行形式を保持します。対象はコマンドに列挙したファイルだけです。
+TypeScript helper では `src/AllCodeChecker.TypeScript` で依存関係をインストール後、`npm run format` で helper・検証スクリプト・package.json・CLI project・CI と関連手順書を整形し、`npm run format:check` で確認します。Prettier 3.6.2 と XML plugin 3.4.1 を使い、既存の改行形式を保持します。対象はコマンドに列挙したファイルだけです。

@@ -11,8 +11,8 @@ Issue #8 の TypeScript backend は、TypeScript Compiler API を同梱 helper �
 
 ## 配布
 
-CI は固定版 TypeScript を helper directory にインストールし、CLI build/publish 時に実行中の Node runtime、helper、Compiler API を `typescript-runtime/` へ同梱する。利用者側の `PATH` や Node/TypeScript インストールは参照しない。配布用 package は対象 OS 上で作る。
+CI は固定版 TypeScript を helper directory にインストールし、CLI build/publish 時に実行中の Node runtime、helper、Compiler API を `typescript-runtime/` へ同梱する。利用者側の `PATH` や Node/TypeScript インストールは参照しない。配布用 package は対象 OS とアーキテクチャに一致する Node を使って作る。RID 指定時は `win-x64` や `linux-arm64` のような portable RID のみを受け付け、一致しない場合は同梱前に失敗する。Linux の RID 指定時は glibc ベースの Node を要求する。musl を含むその他の RID は未対応とする。RID 未指定時はホストの Node をそのまま同梱するため、成果物はホスト環境に依存する。
 
-開発環境で CLI を build/publish する前に `src/AllCodeChecker.TypeScript` で `npm install --no-package-lock --ignore-scripts --no-audit --no-fund` を実行する。依存物がない build は失敗する。Node なしで core だけを build する場合は packaging target を呼ばない。
+開発環境で CLI を build/publish する前に `src/AllCodeChecker.TypeScript` で `npm ci --ignore-scripts --no-audit --no-fund` を実行する。依存物がない build は失敗する。Node なしで core だけを build する場合は packaging target を呼ばない。
 
 CI は各 OS で self-contained publish を作成し、`PATH` を空にして公開用 CLI から TypeScript の意味診断を取得する。これにより同梱 runtime を使う配布経路を検証する。
