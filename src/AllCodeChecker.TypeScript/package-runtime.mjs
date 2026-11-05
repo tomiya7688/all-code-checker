@@ -7,11 +7,11 @@ const source = path.dirname(fileURLToPath(import.meta.url));
 const assembly = process.argv[2];
 if (!assembly) throw new Error("Output assembly path is required.");
 const rid = process.argv[3];
-const glibcVersion =
+const report =
   rid && process.platform === "linux"
-    ? process.report?.getReport?.()?.header?.glibcVersionRuntime
+    ? process.report?.getReport?.()
     : undefined;
-validateRuntimeTarget(rid, process.platform, process.arch, glibcVersion);
+validateRuntimeTarget(rid, process.platform, process.arch, report);
 const output = path.dirname(assembly);
 
 const compiler = path.join(source, "node_modules", "typescript");

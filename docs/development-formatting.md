@@ -1,6 +1,6 @@
 # PowerShell の整形
 
-リポジトリのルートで PowerShell 7.4 以降を使います。
+リポジトリのルートで PowerShell 7.4.6 以降を使います。
 
 ```powershell
 ./tools/format-powershell.ps1

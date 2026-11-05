@@ -7,6 +7,15 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { validateRuntimeTarget } from "./runtime-target.mjs";
 
+const linuxReport = {
+  header: { glibcVersionRuntime: "2.38" },
+  sharedObjects: [
+    "linux-vdso.so.1",
+    "/lib/x86_64-linux-gnu/libc.so.6",
+    "/lib64/ld-linux-x86-64.so.2",
+  ],
+};
+
 test("portable RIDs must match the host Node platform and architecture", () => {
   for (const [rid, platform, arch] of [
     ["win-x64", "win32", "x64"],
@@ -15,7 +24,7 @@ test("portable RIDs must match the host Node platform and architecture", () => {
     ["osx-arm64", "darwin", "arm64"],
   ]) {
     assert.doesNotThrow(() =>
-      validateRuntimeTarget(rid, platform, arch, "2.38"),
+      validateRuntimeTarget(rid, platform, arch, linuxReport),
     );
   }
   assert.doesNotThrow(() => validateRuntimeTarget("", "win32", "x64"));
@@ -46,6 +55,35 @@ test("portable RIDs must match the host Node platform and architecture", () => {
   assert.throws(
     () => validateRuntimeTarget("linux-arm64", "linux", "arm64"),
     /glibc-based host Node/,
+  );
+  assert.throws(
+    () =>
+      validateRuntimeTarget("linux-x64", "linux", "x64", {
+        header: { glibcVersionRuntime: "2.38" },
+      }),
+    /Cannot inspect/,
+  );
+  assert.throws(
+    () =>
+      validateRuntimeTarget("linux-x64", "linux", "x64", {
+        ...linuxReport,
+        sharedObjects: [
+          ...linuxReport.sharedObjects,
+          "/usr/lib/libnode.so.127",
+        ],
+      }),
+    /unsupported shared libraries.*libnode/,
+  );
+  assert.throws(
+    () =>
+      validateRuntimeTarget("linux-x64", "linux", "x64", {
+        ...linuxReport,
+        sharedObjects: [
+          ...linuxReport.sharedObjects,
+          "/usr/lib/libcrypto.so.3",
+        ],
+      }),
+    /unsupported shared libraries.*libcrypto/,
   );
 });
 

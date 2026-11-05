@@ -4,6 +4,10 @@ param(
     [string[]]$Paths = @('src/AllCodeChecker.TypeScript/verify-published.ps1', 'tools/format-powershell.ps1')
 )
 
+if ($PSVersionTable.PSVersion -lt [version]'7.4.6') {
+    throw "PSScriptAnalyzer 1.25.0 requires PowerShell 7.4.6 or later; current version: $($PSVersionTable.PSVersion)."
+}
+
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $cache = Join-Path $root '.formatter-cache'
