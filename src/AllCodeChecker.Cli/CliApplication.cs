@@ -65,7 +65,8 @@ internal static class CliApplication
 
             AnalysisOrchestrationResult analysis = new AnalyzerOrchestrator([
                     new CSharpProjectAnalyzer(),
-                    new PythonProjectAnalyzer()
+                    new PythonProjectAnalyzer(),
+                    new TypeScriptProjectAnalyzer()
                 ])
                 .AnalyzeAsync(discoveryResult)
                 .GetAwaiter()
