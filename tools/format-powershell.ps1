@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 param(
     [switch]$Check,
     [string[]]$Paths = @('src/AllCodeChecker.TypeScript/verify-published.ps1', 'tools/format-powershell.ps1')

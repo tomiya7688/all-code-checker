@@ -59,7 +59,9 @@ function symbolsOf(source, checker) {
         const line =
           source.getLineAndCharacterOfPosition(node.name.getStart(source))
             .line + 1;
-        const isObject = Boolean(type.flags & ts.TypeFlags.Object);
+        const isObject = Boolean(
+          type.flags & (ts.TypeFlags.Object | ts.TypeFlags.Intersection),
+        );
         symbols.push({
           filePath: source.fileName,
           name: symbol.getName(),
@@ -144,6 +146,12 @@ function analyze(request) {
 
   // TypeScript 6 defaults strict to true; explicit options take precedence.
   const strictNullChecks = options.strictNullChecks ?? options.strict ?? true;
+  const program = ts.createProgram({ rootNames, options });
+  const optionDiagnostics = program.getOptionsDiagnostics();
+  diagnostics.push(
+    ...optionDiagnostics.map((item) => diagnosticOf(item, "ACI001")),
+  );
+  partial ||= optionDiagnostics.length > 0;
   if (rootNames.length === 0) {
     return {
       partial: true,
@@ -156,7 +164,6 @@ function analyze(request) {
     };
   }
 
-  const program = ts.createProgram({ rootNames, options });
   const checker = program.getTypeChecker();
   const symbols = [];
   for (const source of program.getSourceFiles()) {

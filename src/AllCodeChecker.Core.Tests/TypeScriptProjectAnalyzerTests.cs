@@ -51,6 +51,31 @@ public sealed class TypeScriptProjectAnalyzerTests
     }
 
     [Fact]
+    public async Task ProjectOptionsErrorPreservesIntersectionPropertiesAndMarksPartial()
+    {
+        using var fixture = new AnalyzerFixture();
+        string project = fixture.Write("tsconfig.json", """
+            {"compilerOptions":{"strict":false,"exactOptionalPropertyTypes":true},"include":["*.ts"]}
+            """);
+        fixture.Write("model.ts", """
+            const dto: { id: string } & { name: string } = { id: "1", name: "n" };
+            """);
+
+        AnalysisOrchestrationResult result = await AnalyzerFixture.AnalyzeAsync(
+            project, new TypeScriptProjectAnalyzer());
+
+        AnalyzerScopeResult scope = Assert.Single(result.Scopes);
+        Assert.Equal(AnalyzerCompletionStatus.Partial, scope.Status);
+        Assert.Contains(scope.Diagnostics, diagnostic => diagnostic.RuleId == "ACI001"
+            && diagnostic.Reason.Contains("TS5052", StringComparison.Ordinal));
+        TypeScriptProjectAnalysisData data = Assert.Single(scope.AnalysisData!
+            .OfType<TypeScriptProjectAnalysisData>());
+        TypeScriptSymbolSummary dto = Assert.Single(data.Symbols, symbol => symbol.Name == "dto");
+        Assert.Contains("id", dto.Properties);
+        Assert.Contains("name", dto.Properties);
+    }
+
+    [Fact]
     public async Task NestedTypeScriptProjectKeepsSyntaxErrorInsideItsBoundary()
     {
         using var fixture = new AnalyzerFixture();
