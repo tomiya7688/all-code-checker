@@ -7,4 +7,5 @@ public sealed record AnalyzerScopeResult(
     SupportedLanguage Language,
     string BoundaryPath,
     AnalyzerCompletionStatus Status,
-    IReadOnlyList<CheckerDiagnostic> Diagnostics);
+    IReadOnlyList<CheckerDiagnostic> Diagnostics,
+    IReadOnlyList<AnalyzerAnalysisData>? AnalysisData = null);

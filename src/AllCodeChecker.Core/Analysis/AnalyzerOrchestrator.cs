@@ -39,10 +39,10 @@ public sealed class AnalyzerOrchestrator
         AnalyzerScopeResult[] scopes = executionMode switch
         {
             AnalyzerExecutionMode.Parallel =>
-                await AnalyzeParallelAsync(discovery.Groups, cancellationToken)
+                await AnalyzeParallelAsync(discovery, cancellationToken)
                     .ConfigureAwait(false),
             AnalyzerExecutionMode.Sequential =>
-                await AnalyzeSequentialAsync(discovery.Groups, cancellationToken)
+                await AnalyzeSequentialAsync(discovery, cancellationToken)
                     .ConfigureAwait(false),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(executionMode),
@@ -58,13 +58,13 @@ public sealed class AnalyzerOrchestrator
     }
 
     private async Task<AnalyzerScopeResult[]> AnalyzeParallelAsync(
-        IReadOnlyList<DiscoveredSourceGroup> groups,
+        AnalysisDiscoveryResult discovery,
         CancellationToken cancellationToken)
     {
         // An analyzer can do synchronous work before it returns its task.
-        Task<AnalyzerScopeResult>[] tasks = groups
+        Task<AnalyzerScopeResult>[] tasks = discovery.Groups
             .Select(group => Task.Run(
-                () => AnalyzeScopeAsync(group, cancellationToken),
+                () => AnalyzeScopeAsync(group, discovery, cancellationToken),
                 cancellationToken))
             .ToArray();
 
@@ -72,16 +72,16 @@ public sealed class AnalyzerOrchestrator
     }
 
     private async Task<AnalyzerScopeResult[]> AnalyzeSequentialAsync(
-        IReadOnlyList<DiscoveredSourceGroup> groups,
+        AnalysisDiscoveryResult discovery,
         CancellationToken cancellationToken)
     {
-        var results = new List<AnalyzerScopeResult>(groups.Count);
+        var results = new List<AnalyzerScopeResult>(discovery.Groups.Count);
 
-        foreach (DiscoveredSourceGroup group in groups)
+        foreach (DiscoveredSourceGroup group in discovery.Groups)
         {
             cancellationToken.ThrowIfCancellationRequested();
             results.Add(
-                await AnalyzeScopeAsync(group, cancellationToken)
+                await AnalyzeScopeAsync(group, discovery, cancellationToken)
                     .ConfigureAwait(false));
         }
 
@@ -90,6 +90,7 @@ public sealed class AnalyzerOrchestrator
 
     private async Task<AnalyzerScopeResult> AnalyzeScopeAsync(
         DiscoveredSourceGroup group,
+        AnalysisDiscoveryResult discovery,
         CancellationToken cancellationToken)
     {
         if (!analyzers.TryGetValue(group.Language, out ILanguageAnalyzer? analyzer))
@@ -107,7 +108,11 @@ public sealed class AnalyzerOrchestrator
         try
         {
             AnalyzerExecutionResult result = await analyzer
-                .AnalyzeAsync(new AnalyzerRequest(group), cancellationToken)
+                .AnalyzeAsync(new AnalyzerRequest(
+                    group,
+                    discovery.InputKind,
+                    discovery.InputPath,
+                    discovery.EntryFile), cancellationToken)
                 .ConfigureAwait(false);
 
             if (result is null)
@@ -157,6 +162,7 @@ public sealed class AnalyzerOrchestrator
             group.Language,
             group.BoundaryPath,
             executionResult.Status,
-            DiagnosticDeduplicator.Deduplicate(diagnostics));
+            DiagnosticDeduplicator.Deduplicate(diagnostics),
+            executionResult.AnalysisData);
     }
 }
