@@ -61,8 +61,11 @@ public sealed class AnalyzerOrchestrator
         AnalysisDiscoveryResult discovery,
         CancellationToken cancellationToken)
     {
+        // An analyzer can do synchronous work before it returns its task.
         Task<AnalyzerScopeResult>[] tasks = discovery.Groups
-            .Select(group => AnalyzeScopeAsync(group, discovery, cancellationToken))
+            .Select(group => Task.Run(
+                () => AnalyzeScopeAsync(group, discovery, cancellationToken),
+                cancellationToken))
             .ToArray();
 
         return await Task.WhenAll(tasks).ConfigureAwait(false);

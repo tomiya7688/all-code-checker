@@ -66,7 +66,7 @@ public sealed class AnalyzerOrchestratorTests
         var analyzer = new FakeAnalyzer(
             SupportedLanguage.TypeScript,
             (_, _) => Task.FromResult(
-                AnalyzerExecutionResult.Complete([duplicate])));
+                AnalyzerExecutionResult.Complete([duplicate with { }])));
 
         var orchestrator = new AnalyzerOrchestrator([analyzer]);
 
@@ -210,6 +210,89 @@ public sealed class AnalyzerOrchestratorTests
     }
 
     [Fact]
+    public async Task ParallelModeOverlapsSynchronousAnalyzerWork()
+    {
+        AnalysisDiscoveryResult discovery = CreateDiscovery(
+            Group(SupportedLanguage.Python, "/repo/one", "/repo/one/app.py"),
+            Group(SupportedLanguage.Python, "/repo/two", "/repo/two/app.py"));
+        using var started = new CountdownEvent(2);
+        int overlappingScopes = 0;
+        var analyzer = new FakeAnalyzer(
+            SupportedLanguage.Python,
+            (_, cancellationToken) =>
+            {
+                started.Signal();
+                if (started.Wait(TimeSpan.FromSeconds(15), cancellationToken))
+                {
+                    Interlocked.Increment(ref overlappingScopes);
+                }
+
+                return Task.FromResult(AnalyzerExecutionResult.Complete());
+            });
+        var orchestrator = new AnalyzerOrchestrator([analyzer]);
+
+        AnalysisOrchestrationResult result = await orchestrator.AnalyzeAsync(
+            discovery,
+            AnalyzerExecutionMode.Parallel);
+
+        Assert.True(result.IsComplete);
+        Assert.Equal(2, overlappingScopes);
+    }
+
+    [Theory]
+    [InlineData(AnalyzerExecutionMode.Parallel)]
+    [InlineData(AnalyzerExecutionMode.Sequential)]
+    public async Task ExecutionModeControlsWhenAsyncScopesStart(AnalyzerExecutionMode mode)
+    {
+        AnalysisDiscoveryResult discovery = CreateDiscovery(
+            Group(SupportedLanguage.CSharp, "/repo/one", "/repo/one/App.cs"),
+            Group(SupportedLanguage.Python, "/repo/two", "/repo/two/app.py"));
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = new FakeAnalyzer(
+            SupportedLanguage.CSharp,
+            async (_, cancellationToken) =>
+            {
+                firstStarted.SetResult();
+                await releaseFirst.Task.WaitAsync(TimeSpan.FromSeconds(15), cancellationToken);
+                return AnalyzerExecutionResult.Complete();
+            });
+        var second = new FakeAnalyzer(
+            SupportedLanguage.Python,
+            (_, _) =>
+            {
+                secondStarted.SetResult();
+                return Task.FromResult(AnalyzerExecutionResult.Complete());
+            });
+        var orchestrator = new AnalyzerOrchestrator([first, second]);
+        Task<AnalysisOrchestrationResult> analysis = orchestrator.AnalyzeAsync(discovery, mode);
+
+        try
+        {
+            await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            if (mode == AnalyzerExecutionMode.Parallel)
+            {
+                await secondStarted.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            }
+            else
+            {
+                Assert.False(secondStarted.Task.IsCompleted);
+            }
+
+            Assert.False(analysis.IsCompleted);
+        }
+        finally
+        {
+            releaseFirst.TrySetResult();
+        }
+
+        AnalysisOrchestrationResult result = await analysis.WaitAsync(TimeSpan.FromSeconds(15));
+        Assert.True(secondStarted.Task.IsCompletedSuccessfully);
+        Assert.True(result.IsComplete);
+    }
+
+    [Fact]
     public async Task SequentialModeRunsScopesInDiscoveryOrder()
     {
         var invocationOrder = new List<string>();
@@ -265,6 +348,33 @@ public sealed class AnalyzerOrchestratorTests
             () => orchestrator.AnalyzeAsync(
                 discovery,
                 cancellationToken: cancellation.Token));
+    }
+
+    [Fact]
+    public async Task CancellationAfterAnalyzerStartsIsPropagated()
+    {
+        AnalysisDiscoveryResult discovery = CreateDiscovery(
+            Group(SupportedLanguage.Python, "/repo/python", "/repo/python/app.py"));
+        var started = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var analyzer = new FakeAnalyzer(
+            SupportedLanguage.Python,
+            async (_, cancellationToken) =>
+            {
+                started.SetResult(cancellationToken);
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                return AnalyzerExecutionResult.Complete();
+            });
+        var orchestrator = new AnalyzerOrchestrator([analyzer]);
+        using var cancellation = new CancellationTokenSource();
+
+        Task<AnalysisOrchestrationResult> analysis = orchestrator.AnalyzeAsync(
+            discovery,
+            cancellationToken: cancellation.Token);
+        Assert.Equal(cancellation.Token, await started.Task.WaitAsync(TimeSpan.FromSeconds(15)));
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => analysis.WaitAsync(TimeSpan.FromSeconds(15)));
     }
 
     [Fact]
