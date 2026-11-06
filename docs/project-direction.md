@@ -3078,7 +3078,7 @@ Planned packaging:
 
 - C#: all-code-checker itself is a self-contained .NET 10 application
 - TypeScript: bundle the Compiler API helper plus the JavaScript runtime/components required to execute it
-- Python: bundle the analyzer and required portable Python runtime/components
+- Python: bundle a Python grammar/parser and its portable runtime components; do not require a host Python installation
 - Go: prebuild the Go analyzer helper as a native executable and bundle it
 - bundled analyzers are internal implementation details and should not depend on PATH-discovered host toolchains
 

@@ -242,13 +242,31 @@ public sealed class CliContractTests
             output,
             error);
 
-        Assert.Equal((int)CliExitCode.DiagnosticsFound, exitCode);
+        Assert.Equal((int)CliExitCode.Success, exitCode);
         Assert.True(File.Exists(resultPath));
         Assert.Equal(string.Empty, output.ToString());
         Assert.Equal(string.Empty, error.ToString());
 
         using JsonDocument document = JsonDocument.Parse(File.ReadAllText(resultPath));
         Assert.Equal(1, document.RootElement.GetProperty("version").GetInt32());
+    }
+
+    [Fact]
+    public void ApplicationReportsPythonSyntaxErrors()
+    {
+        using var fixture = new CliFixture();
+        fixture.CreateFile("src/main.py", "def broken(:\n    pass\n");
+        using var output = new StringWriter();
+        using var error = new StringWriter();
+
+        int exitCode = CliApplication.Run(
+            [fixture.Root, "--format", "json", "--fail-on", "notice"],
+            output,
+            error);
+
+        Assert.Equal((int)CliExitCode.DiagnosticsFound, exitCode);
+        Assert.Contains("ACI002", output.ToString(), StringComparison.Ordinal);
+        Assert.Equal(string.Empty, error.ToString());
     }
 
     private sealed class CliFixture : IDisposable

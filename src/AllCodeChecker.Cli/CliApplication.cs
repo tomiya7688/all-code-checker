@@ -63,7 +63,10 @@ internal static class CliApplication
                     "対応しているsource fileが解析対象内に見つかりません。");
             }
 
-            AnalysisOrchestrationResult analysis = new AnalyzerOrchestrator([new CSharpProjectAnalyzer()])
+            AnalysisOrchestrationResult analysis = new AnalyzerOrchestrator([
+                    new CSharpProjectAnalyzer(),
+                    new PythonProjectAnalyzer()
+                ])
                 .AnalyzeAsync(discoveryResult)
                 .GetAwaiter()
                 .GetResult();
